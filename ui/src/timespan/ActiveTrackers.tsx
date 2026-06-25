@@ -32,13 +32,13 @@ export const ActiveTrackers = () => {
     }
 
     return (
-        <>
-            <Typography align="center" variant="h5" style={{marginTop: 10}}>
+        <div style={{marginBottom: 32, paddingBottom: 24, borderBottom: '1px solid rgba(128, 128, 128, 0.25)'}}>
+            <Typography align="center" variant="h5" style={{marginTop: 10, marginBottom: 8}}>
                 Active Timers
             </Typography>
             {values.map((value) => {
                 return <TimeSpan key={value.id} {...value} />;
             })}
-        </>
+        </div>
     );
 };
