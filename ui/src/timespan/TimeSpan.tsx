@@ -189,7 +189,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                     margin: '10px 0',
                     opacity: wasMoved ? 0.5 : 1,
                     width: '100%',
-                    borderLeft: running ? `4px solid ${theme.palette.primary.main}` : undefined,
+                    borderLeft: running ? `10px solid ${theme.palette.primary.main}` : undefined,
                 }}>
                 <div className={styles.innerTimespan}>
                     <div className={styles.tagInput}>
@@ -284,6 +284,8 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                                 />
                             ) : (
                                 <Button
+                                    variant="contained"
+                                    color="primary"
                                     onClick={() => {
                                         stopTimer({variables: {id, end: inUserTz(moment()).format()}}).then(stopped);
                                     }}>
@@ -293,6 +295,18 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                         </div>
 
                         <div style={{alignItems: 'center', display: 'flex'}}>
+                            {running ? (
+                                <Typography
+                                    component="span"
+                                    style={{
+                                        color: theme.palette.primary.main,
+                                        fontWeight: 'bold',
+                                        marginRight: 8,
+                                        whiteSpace: 'nowrap',
+                                    }}>
+                                    ● running
+                                </Typography>
+                            ) : null}
                             <Typography
                                 variant="subtitle1"
                                 style={{

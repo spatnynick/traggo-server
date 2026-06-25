@@ -32,7 +32,7 @@ export const ActiveTrackers = () => {
     }
 
     return (
-        <div style={{marginBottom: 32, paddingBottom: 24, borderBottom: '1px solid rgba(128, 128, 128, 0.25)'}}>
+        <div style={{marginTop: 30, marginBottom: 32, paddingBottom: 24}}>
             <Typography align="center" variant="h5" style={{marginTop: 10, marginBottom: 8}}>
                 Active Timers
             </Typography>
