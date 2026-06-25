@@ -137,10 +137,7 @@ const DatedTimeSpans: React.FC<{
         }
     }, [ref, name, setHeight, height]);
     return (
-        <div
-            key={name}
-            ref={(r) => (ref.current = r)}
-            style={{paddingTop: 16, paddingBottom: 32, borderBottom: '1px solid rgba(128, 128, 128, 0.25)'}}>
+        <div key={name} ref={(r) => (ref.current = r)} style={{paddingTop: 16, paddingBottom: 42}}>
             <Typography key={name} align="center" variant={'h5'} style={{marginBottom: 8}}>
                 {name}
             </Typography>
