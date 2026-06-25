@@ -8,7 +8,8 @@ import useInterval from '@rooks/use-interval';
 import moment from 'moment';
 import {TimeSpans, TimeSpansVariables} from '../gql/__generated__/TimeSpans';
 import {Typography} from '@material-ui/core';
-import {GroupedTimeSpanProps, toGroupedTimeSpanProps, sumEffortSeconds, formatEffort} from './timespanutils';
+import {GroupedTimeSpanProps, toGroupedTimeSpanProps, sumEffortSeconds} from './timespanutils';
+import {useDurationFormatter} from './durationFormat';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import ReactInfinite from 'react-infinite';
 import {isSameDate} from '../utils/time';
@@ -136,7 +137,8 @@ const DatedTimeSpans: React.FC<{
             setHeight((old) => ({...old, [name]: currentHeight}));
         }
     }, [ref, name, setHeight, height]);
-    const dayEffort = formatEffort(sumEffortSeconds(timeSpans, moment()));
+    const formatDuration = useDurationFormatter();
+    const dayEffort = formatDuration(sumEffortSeconds(timeSpans, moment()), {unitCount: 2});
     return (
         <div key={name} ref={(r) => (ref.current = r)} style={{paddingTop: 16, paddingBottom: 42}}>
             <Typography key={name} align="center" variant={'h5'} style={{marginBottom: 8}}>
