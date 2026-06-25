@@ -141,8 +141,8 @@ const DatedTimeSpans: React.FC<{
         <div key={name} ref={(r) => (ref.current = r)} style={{paddingTop: 16, paddingBottom: 42}}>
             <Typography key={name} align="center" variant={'h5'} style={{marginBottom: 8}}>
                 {name}
-                <Typography component="span" variant="subtitle1" color="textSecondary" style={{marginLeft: 8}}>
-                    {dayEffort}
+                <Typography component="span" variant="body2" color="textSecondary" style={{marginLeft: 12}}>
+                    total {dayEffort}
                 </Typography>
             </Typography>
             {timeSpans.map((timeSpanProps) => (

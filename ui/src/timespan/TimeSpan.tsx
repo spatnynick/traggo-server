@@ -295,18 +295,6 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                         </div>
 
                         <div style={{alignItems: 'center', display: 'flex'}}>
-                            {running ? (
-                                <Typography
-                                    component="span"
-                                    style={{
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 'bold',
-                                        marginRight: 8,
-                                        whiteSpace: 'nowrap',
-                                    }}>
-                                    ● running
-                                </Typography>
-                            ) : null}
                             <Typography
                                 variant="subtitle1"
                                 style={{
