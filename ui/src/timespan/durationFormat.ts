@@ -1,7 +1,15 @@
+import prettyMs from 'pretty-ms';
 import {DurationFormat} from '../gql/__generated__/globalTypes';
 import {useSettings} from '../gql/settings';
 
 const pad2 = (n: number): string => (n < 10 ? `0${n}` : `${n}`);
+
+// Legacy pretty-ms options, passed by each call site so the default "Days + hours"
+// preset reproduces the exact pre-existing output there (the list view truncated to
+// two units, the dashboard showed all units).
+export interface LegacyOptions {
+    unitCount?: number;
+}
 
 interface Parts {
     days: number;
@@ -26,18 +34,10 @@ const split = (totalSeconds: number): Parts => {
     };
 };
 
-const daysHours = (p: Parts): string => {
-    // Mirrors the previous pretty-ms output (unitCount: 2), largest two non-zero units.
-    const units: Array<[number, string]> = [
-        [p.days, 'd'],
-        [p.hoursOfDay, 'h'],
-        [p.minutesOfHour, 'm'],
-        [p.secondsOfMinute, 's'],
-    ];
-    const nonZero = units.filter(([v]) => v > 0);
-    const shown = (nonZero.length ? nonZero : [[0, 'm'] as [number, string]]).slice(0, 2);
-    return shown.map(([v, u]) => `${v}${u}`).join(' ');
-};
+// The legacy "Days + hours" preset: delegate to pretty-ms exactly as the original code
+// did, so existing users see no change. The leading "~" pretty-ms adds when truncating
+// is stripped (the list view did this with .substring(1)).
+const daysHours = (p: Parts, legacy?: LegacyOptions): string => prettyMs(p.totalSeconds * 1000, legacy).replace(/^~/, '');
 
 const goStyle = (p: Parts): string => `${p.totalHours}h${p.minutesOfHour}m`;
 
@@ -87,7 +87,7 @@ const goCustom = (p: Parts, pattern: string): string => {
     return (order.length ? order : ['h', 'm', 's']).map((l) => `${values[l]}${l}`).join('');
 };
 
-export const formatDuration = (totalSeconds: number, format: DurationFormat, custom: string): string => {
+export const formatDuration = (totalSeconds: number, format: DurationFormat, custom: string, legacy?: LegacyOptions): string => {
     const p = split(totalSeconds);
     switch (format) {
         case DurationFormat.HHMM:
@@ -102,11 +102,12 @@ export const formatDuration = (totalSeconds: number, format: DurationFormat, cus
             return goCustom(p, custom);
         case DurationFormat.DaysHours:
         default:
-            return daysHours(p);
+            return daysHours(p, legacy);
     }
 };
 
-export const useDurationFormatter = (): ((totalSeconds: number) => string) => {
+export const useDurationFormatter = (): ((totalSeconds: number, legacy?: LegacyOptions) => string) => {
     const {durationFormat, durationCustomFormat} = useSettings();
-    return (totalSeconds: number) => formatDuration(totalSeconds, durationFormat, durationCustomFormat);
+    return (totalSeconds: number, legacy?: LegacyOptions) =>
+        formatDuration(totalSeconds, durationFormat, durationCustomFormat, legacy);
 };

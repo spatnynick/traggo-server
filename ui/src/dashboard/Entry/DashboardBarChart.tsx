@@ -7,6 +7,7 @@ import {ofInterval} from './dateformat';
 import {StatsInterval} from '../../gql/__generated__/globalTypes';
 import moment from 'moment';
 import {TagTooltip} from './TagTooltip';
+import {useDurationFormatter} from '../../timespan/durationFormat';
 
 interface DashboardPieChartProps {
     entries: Stats_stats[];
@@ -22,6 +23,7 @@ interface Indexed {
 }
 
 export const DashboardBarChart: React.FC<DashboardPieChartProps> = ({entries, interval, type, total}) => {
+    const formatDuration = useDurationFormatter();
     const indexedEntries: Indexed[] = entries
         .map((entry) => {
             return {
@@ -47,7 +49,7 @@ export const DashboardBarChart: React.FC<DashboardPieChartProps> = ({entries, in
             <BarChart data={indexedEntries}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <YAxis type="number" unit={unit.short} />
-                <Tooltip content={<TagTooltip dateFormat={dateFormat} total={total} />} />
+                <Tooltip content={<TagTooltip dateFormat={dateFormat} total={total} formatDuration={formatDuration} />} />
                 <Legend />
                 <XAxis dataKey={(entry) => dateFormat(moment(entry.start))} interval={'preserveStartEnd'} />
 

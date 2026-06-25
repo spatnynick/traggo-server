@@ -20,5 +20,5 @@ export const RelativeToNow: React.FC<{from: moment.Moment}> = ({from}) => {
 export const RelativeTime: React.FC<{from: moment.Moment; to: moment.Moment}> = ({from, to}) => {
     const format = useDurationFormatter();
     const seconds = inUserTz(to).unix() - inUserTz(from).unix();
-    return <>{format(seconds)}</>;
+    return <>{format(seconds, {unitCount: 2})}</>;
 };
