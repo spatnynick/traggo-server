@@ -28,20 +28,24 @@ func TestSettingsResolver(t *testing.T) {
 	require.Equal(t, gqlmodel.ThemeGruvboxDark, settings.Theme)
 
 	_, err = resolver.SetUserSettings(fake.User(1), gqlmodel.InputUserSettings{
-		Theme:              gqlmodel.ThemeGruvboxLight,
-		DateLocale:         gqlmodel.DateLocaleGerman,
-		FirstDayOfTheWeek:  gqlmodel.WeekDayWednesday,
-		DateTimeInputStyle: gqlmodel.DateTimeInputStyleFancy,
+		Theme:                gqlmodel.ThemeGruvboxLight,
+		DateLocale:           gqlmodel.DateLocaleGerman,
+		FirstDayOfTheWeek:    gqlmodel.WeekDayWednesday,
+		DateTimeInputStyle:   gqlmodel.DateTimeInputStyleFancy,
+		DurationFormat:       gqlmodel.DurationFormatHhmm,
+		DurationCustomFormat: "%H:%M",
 	})
 	require.NoError(t, err)
 
 	settings, err = resolver.UserSettings(fake.User(1))
 	require.NoError(t, err)
 	require.Equal(t, &gqlmodel.UserSettings{
-		Theme:              gqlmodel.ThemeGruvboxLight,
-		DateLocale:         gqlmodel.DateLocaleGerman,
-		FirstDayOfTheWeek:  gqlmodel.WeekDayWednesday,
-		DateTimeInputStyle: gqlmodel.DateTimeInputStyleFancy,
+		Theme:                gqlmodel.ThemeGruvboxLight,
+		DateLocale:           gqlmodel.DateLocaleGerman,
+		FirstDayOfTheWeek:    gqlmodel.WeekDayWednesday,
+		DateTimeInputStyle:   gqlmodel.DateTimeInputStyleFancy,
+		DurationFormat:       gqlmodel.DurationFormatHhmm,
+		DurationCustomFormat: "%H:%M",
 	}, settings)
 }
 
@@ -64,5 +68,7 @@ func TestShouldHandleInvalidInputs(t *testing.T) {
 	toInternalDateLocale("aoeu")
 	toExternalDateTimeInputStyle("aoeu")
 	toInternalDateTimeInputStyle("aoeu")
+	toExternalDurationFormat("aoeu")
+	toInternalDurationFormat("aoeu")
 
 }

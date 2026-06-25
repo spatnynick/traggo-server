@@ -4,11 +4,13 @@ import "time"
 
 // UserSetting a setting for a user.
 type UserSetting struct {
-	UserID             int `gorm:"primary_key;unique_index"`
-	Theme              string
-	DateLocale         string
-	FirstDayOfTheWeek  string
-	DateTimeInputStyle string
+	UserID               int `gorm:"primary_key;unique_index"`
+	Theme                string
+	DateLocale           string
+	FirstDayOfTheWeek    string
+	DateTimeInputStyle   string
+	DurationFormat       string
+	DurationCustomFormat string
 }
 
 // Settings constants
@@ -26,6 +28,13 @@ const (
 
 	DateTimeInputFancy  = "Fancy"
 	DateTimeInputNative = "Native"
+
+	DurationFormatDaysHours      = "DaysHours"
+	DurationFormatHHMM           = "HHMM"
+	DurationFormatDecimalHours   = "DecimalHours"
+	DurationFormatGoStyle        = "GoStyle"
+	DurationFormatCustomStrftime = "CustomStrftime"
+	DurationFormatCustomGo       = "CustomGo"
 )
 
 var daysOfWeek = map[string]time.Weekday{

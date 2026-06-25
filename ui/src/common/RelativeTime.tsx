@@ -1,6 +1,7 @@
 import moment from 'moment';
 import * as React from 'react';
-import {timeRunning} from '../timespan/timeutils';
+import {inUserTz} from '../timespan/timeutils';
+import {useDurationFormatter} from '../timespan/durationFormat';
 import useInterval from '@rooks/use-interval';
 
 export const RelativeToNow: React.FC<{from: moment.Moment}> = ({from}) => {
@@ -17,5 +18,7 @@ export const RelativeToNow: React.FC<{from: moment.Moment}> = ({from}) => {
 };
 
 export const RelativeTime: React.FC<{from: moment.Moment; to: moment.Moment}> = ({from, to}) => {
-    return <>{timeRunning(from, to)}</>;
+    const format = useDurationFormatter();
+    const seconds = inUserTz(to).unix() - inUserTz(from).unix();
+    return <>{format(seconds)}</>;
 };
