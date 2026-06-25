@@ -48,7 +48,11 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({entries, interval
                             <TableRow>
                                 <TableCell>Date</TableCell>
                                 {keys.map((key) => {
-                                    return <TableCell key={key}>{key}</TableCell>;
+                                    return (
+                                        <TableCell key={key} align="right">
+                                            {key}
+                                        </TableCell>
+                                    );
                                 })}
                             </TableRow>
                         </TableHead>
@@ -58,7 +62,9 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({entries, interval
                                     <TableRow key={entry.start}>
                                         <TableCell>{dateFormat(moment(entry.start))}</TableCell>
                                         {keys.map((key) => (
-                                            <TableCell key={key + entry.start}>{formatDuration(entry.data[key])}</TableCell>
+                                            <TableCell key={key + entry.start} align="right">
+                                                {formatDuration(entry.data[key])}
+                                            </TableCell>
                                         ))}
                                     </TableRow>
                                 );
@@ -71,7 +77,11 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({entries, interval
                             <TableRow>
                                 <TableCell>Date</TableCell>
                                 {indexedEntries.map((entry) => {
-                                    return <TableCell key={entry.start}>{dateFormat(moment(entry.start))}</TableCell>;
+                                    return (
+                                        <TableCell key={entry.start} align="right">
+                                            {dateFormat(moment(entry.start))}
+                                        </TableCell>
+                                    );
                                 })}
                             </TableRow>
                         </TableHead>
@@ -81,7 +91,9 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({entries, interval
                                     <TableRow key={key}>
                                         <TableCell>{key}</TableCell>
                                         {indexedEntries.map((entry) => (
-                                            <TableCell key={key + entry.start}>{formatDuration(entry.data[key])}</TableCell>
+                                            <TableCell key={key + entry.start} align="right">
+                                                {formatDuration(entry.data[key])}
+                                            </TableCell>
                                         ))}
                                     </TableRow>
                                 );
