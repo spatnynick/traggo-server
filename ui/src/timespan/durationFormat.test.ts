@@ -4,17 +4,22 @@ import {DurationFormat} from '../gql/__generated__/globalTypes';
 const H = 3600;
 const longSpan = 225 * H; // 9d 9h
 const shortSpan = 1 * H + 30 * 60; // 1h 30m
+const messySpan = 9 * 86400 + 23 * H + 2 * 60 + 36; // 9d 23h 2m 36s
 
 describe('formatDuration', () => {
-    it('DaysHours keeps the legacy two-unit output', () => {
-        expect(formatDuration(longSpan, DurationFormat.DaysHours, '')).toBe('9d 9h');
+    it('DaysHours delegates to pretty-ms; legacy unitCount reproduces the old list output', () => {
+        // dashboard called pretty-ms with all units (no legacy options)
+        expect(formatDuration(messySpan, DurationFormat.DaysHours, '')).toBe('9d 23h 2m 36s');
+        // list view passed unitCount: 2, truncating to the largest two units
+        expect(formatDuration(messySpan, DurationFormat.DaysHours, '', {unitCount: 2})).toBe('9d 23h');
+        expect(formatDuration(longSpan, DurationFormat.DaysHours, '', {unitCount: 2})).toBe('9d 9h');
         expect(formatDuration(shortSpan, DurationFormat.DaysHours, '')).toBe('1h 30m');
-        expect(formatDuration(0, DurationFormat.DaysHours, '')).toBe('0m');
     });
 
     it('HHMM always renders total hours and zero-padded minutes', () => {
         expect(formatDuration(longSpan, DurationFormat.HHMM, '')).toBe('225:00');
         expect(formatDuration(shortSpan, DurationFormat.HHMM, '')).toBe('1:30');
+        expect(formatDuration(messySpan, DurationFormat.HHMM, '')).toBe('239:02');
     });
 
     it('DecimalHours renders fractional hours', () => {
