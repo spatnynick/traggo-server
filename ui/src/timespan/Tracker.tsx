@@ -2,8 +2,8 @@ import * as React from 'react';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
-import {Button} from '@material-ui/core';
-import {MoreVert} from '@material-ui/icons';
+import {Button, Input} from '@material-ui/core';
+import {MoreVert, Search} from '@material-ui/icons';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
 import Menu from '@material-ui/core/Menu';
@@ -32,11 +32,30 @@ export const calcShowDate = (from: moment.Moment, to: moment.Moment) => {
 interface TrackerProps {
     onSelectedEntriesChanged: (entries: TagSelectorEntry[]) => void;
     selectedEntries: TagSelectorEntry[];
+    onFilterChange: (filter: string) => void;
 }
 
-export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntriesChanged: setSelectedEntries}) => {
+export const Tracker: React.FC<TrackerProps> = ({
+    selectedEntries,
+    onSelectedEntriesChanged: setSelectedEntries,
+    onFilterChange,
+}) => {
     const [openMenu, setOpenMenu] = React.useState<null | HTMLElement>(null);
     const [type, setType] = React.useState<Type>(Type.Tracker);
+    const [filterMode, setFilterMode] = React.useState(false);
+    const [filterText, setFilterText] = React.useState('');
+
+    React.useEffect(() => {
+        const handle = window.setTimeout(() => onFilterChange(filterText), 250);
+        return () => window.clearTimeout(handle);
+    }, [filterText, onFilterChange]);
+
+    const toggleFilter = () => {
+        if (filterMode) {
+            setFilterText('');
+        }
+        setFilterMode(!filterMode);
+    };
     const [from, setFrom] = React.useState<moment.Moment>(moment().subtract(15, 'minute'));
     const [to, setTo] = React.useState<moment.Moment>(moment());
     const [showDate, setShowDate] = React.useState(false);
@@ -81,13 +100,26 @@ export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntr
         <ClickAwayListener onClickAway={() => setOpenMenu(null)}>
             <Paper style={{display: 'flex', alignItems: 'center', padding: '10px'}}>
                 <div style={{flex: '1', marginRight: 10}}>
-                    <TagSelector
-                        selectedEntries={selectedEntries}
-                        onSelectedEntriesChanged={setSelectedEntries}
-                        onCtrlEnter={submit}
-                    />
+                    {filterMode ? (
+                        <Input
+                            autoFocus
+                            fullWidth
+                            disableUnderline
+                            value={filterText}
+                            placeholder="Filter by note or tags"
+                            onChange={(e) => setFilterText(e.target.value)}
+                            startAdornment={<Search style={{marginRight: 8, opacity: 0.54}} />}
+                            style={{height: 40}}
+                        />
+                    ) : (
+                        <TagSelector
+                            selectedEntries={selectedEntries}
+                            onSelectedEntriesChanged={setSelectedEntries}
+                            onCtrlEnter={submit}
+                        />
+                    )}
                 </div>
-                {type === Type.Manual ? (
+                {!filterMode && type === Type.Manual ? (
                     <div>
                         <DateTimeSelector
                             selectedDate={from}
@@ -127,12 +159,19 @@ export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntr
                         />
                     </div>
                 ) : null}
-                <Button variant="text" style={{height: 50}} onClick={submit}>
-                    {type === Type.Manual ? 'add' : 'start'}
-                </Button>
-                <IconButton onClick={(e: React.MouseEvent<HTMLElement>) => setOpenMenu(e.currentTarget)}>
-                    <MoreVert />
+                {!filterMode ? (
+                    <Button variant="text" style={{height: 50}} onClick={submit}>
+                        {type === Type.Manual ? 'add' : 'start'}
+                    </Button>
+                ) : null}
+                <IconButton onClick={toggleFilter} color={filterMode ? 'primary' : 'default'} title="Filter entries">
+                    <Search />
                 </IconButton>
+                {!filterMode ? (
+                    <IconButton onClick={(e: React.MouseEvent<HTMLElement>) => setOpenMenu(e.currentTarget)}>
+                        <MoreVert />
+                    </IconButton>
+                ) : null}
                 <Menu aria-haspopup="true" anchorEl={openMenu} open={openMenu !== null}>
                     <MenuItem
                         selected={type === Type.Tracker}
