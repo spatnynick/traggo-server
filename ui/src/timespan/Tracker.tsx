@@ -3,7 +3,7 @@ import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
 import {Button, Input} from '@material-ui/core';
-import {MoreVert, Search} from '@material-ui/icons';
+import {MoreVert, Search, Close} from '@material-ui/icons';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
 import Menu from '@material-ui/core/Menu';
@@ -108,6 +108,11 @@ export const Tracker: React.FC<TrackerProps> = ({
                             value={filterText}
                             placeholder="Filter by note or tags"
                             onChange={(e) => setFilterText(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                    toggleFilter();
+                                }
+                            }}
                             startAdornment={<Search style={{marginRight: 8, opacity: 0.54}} />}
                             style={{height: 40}}
                         />
@@ -164,8 +169,11 @@ export const Tracker: React.FC<TrackerProps> = ({
                         {type === Type.Manual ? 'add' : 'start'}
                     </Button>
                 ) : null}
-                <IconButton onClick={toggleFilter} color={filterMode ? 'primary' : 'default'} title="Filter entries">
-                    <Search />
+                <IconButton
+                    onClick={toggleFilter}
+                    color={filterMode ? 'primary' : 'default'}
+                    title={filterMode ? 'Close filter' : 'Filter entries'}>
+                    {filterMode ? <Close /> : <Search />}
                 </IconButton>
                 {!filterMode ? (
                     <IconButton onClick={(e: React.MouseEvent<HTMLElement>) => setOpenMenu(e.currentTarget)}>
