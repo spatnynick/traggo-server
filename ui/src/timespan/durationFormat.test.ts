@@ -44,6 +44,19 @@ describe('formatDuration', () => {
         expect(formatDuration(longSpan, DurationFormat.CustomGo, '')).toBe('225h0m0s');
     });
 
+    it('withSeconds surfaces seconds in the presets that have a seconds slot (running timers)', () => {
+        // DaysHours: allow a third unit so seconds show and the tick is visible
+        expect(formatDuration(shortSpan + 23, DurationFormat.DaysHours, '', {unitCount: 2, withSeconds: true})).toBe('1h 30m 23s');
+        expect(formatDuration(45 * 60 + 9, DurationFormat.DaysHours, '', {unitCount: 2, withSeconds: true})).toBe('45m 9s');
+        // HHMM gains a seconds field
+        expect(formatDuration(shortSpan + 23, DurationFormat.HHMM, '', {withSeconds: true})).toBe('1:30:23');
+        // GoStyle appends seconds
+        expect(formatDuration(shortSpan + 23, DurationFormat.GoStyle, '', {withSeconds: true})).toBe('1h30m23s');
+        // Decimal and user-authored Custom patterns are left untouched
+        expect(formatDuration(shortSpan + 23, DurationFormat.DecimalHours, '', {withSeconds: true})).toBe('1.51h');
+        expect(formatDuration(shortSpan + 23, DurationFormat.CustomStrftime, '%H:%M', {withSeconds: true})).toBe('1:30');
+    });
+
     it('clamps negative input to zero', () => {
         expect(formatDuration(-5, DurationFormat.HHMM, '')).toBe('0:00');
     });

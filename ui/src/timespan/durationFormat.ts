@@ -9,6 +9,11 @@ const pad2 = (n: number): string => (n < 10 ? `0${n}` : `${n}`);
 // two units, the dashboard showed all units).
 export interface LegacyOptions {
     unitCount?: number;
+    // Running timers ask for the seconds to be shown in whatever preset is active, so
+    // the list makes it obvious the timer is actually ticking. Only presets with a
+    // natural seconds slot honor this; Decimal and the user-authored Custom patterns
+    // already control their own precision, so they are left untouched.
+    withSeconds?: boolean;
 }
 
 interface Parts {
@@ -39,7 +44,8 @@ const split = (totalSeconds: number): Parts => {
 // is stripped (the list view did this with .substring(1)).
 const daysHours = (p: Parts, legacy?: LegacyOptions): string => prettyMs(p.totalSeconds * 1000, legacy).replace(/^~/, '');
 
-const goStyle = (p: Parts): string => `${p.totalHours}h${p.minutesOfHour}m`;
+const goStyle = (p: Parts, withSeconds?: boolean): string =>
+    `${p.totalHours}h${p.minutesOfHour}m${withSeconds ? `${p.secondsOfMinute}s` : ''}`;
 
 // Custom strftime-like tokens (see SettingsPage help text):
 //   %d days · %H total hours · %h hours-of-day (2) · %m total minutes
@@ -89,20 +95,23 @@ const goCustom = (p: Parts, pattern: string): string => {
 
 export const formatDuration = (totalSeconds: number, format: DurationFormat, custom: string, legacy?: LegacyOptions): string => {
     const p = split(totalSeconds);
+    const withSeconds = legacy && legacy.withSeconds;
     switch (format) {
         case DurationFormat.HHMM:
-            return `${p.totalHours}:${pad2(p.minutesOfHour)}`;
+            return `${p.totalHours}:${pad2(p.minutesOfHour)}${withSeconds ? `:${pad2(p.secondsOfMinute)}` : ''}`;
         case DurationFormat.DecimalHours:
             return `${(p.totalSeconds / 3600).toFixed(2)}h`;
         case DurationFormat.GoStyle:
-            return goStyle(p);
+            return goStyle(p, withSeconds);
         case DurationFormat.CustomStrftime:
             return strftime(p, custom);
         case DurationFormat.CustomGo:
             return goCustom(p, custom);
         case DurationFormat.DaysHours:
         default:
-            return daysHours(p, legacy);
+            // pretty-ms truncates to the two largest units; while running, allow a third
+            // so the seconds surface (e.g. "1h 5m 23s") and the tick is visible.
+            return daysHours(p, withSeconds ? {...legacy, unitCount: ((legacy && legacy.unitCount) || 2) + 1} : legacy);
     }
 };
 

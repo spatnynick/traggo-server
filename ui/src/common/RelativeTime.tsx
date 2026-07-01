@@ -14,11 +14,11 @@ export const RelativeToNow: React.FC<{from: moment.Moment}> = ({from}) => {
         1000,
         true
     );
-    return <RelativeTime from={from} to={now} />;
+    return <RelativeTime from={from} to={now} running />;
 };
 
-export const RelativeTime: React.FC<{from: moment.Moment; to: moment.Moment}> = ({from, to}) => {
+export const RelativeTime: React.FC<{from: moment.Moment; to: moment.Moment; running?: boolean}> = ({from, to, running}) => {
     const format = useDurationFormatter();
     const seconds = inUserTz(to).unix() - inUserTz(from).unix();
-    return <>{format(seconds, {unitCount: 2})}</>;
+    return <>{format(seconds, {unitCount: 2, withSeconds: running})}</>;
 };
