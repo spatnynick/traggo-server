@@ -291,6 +291,30 @@ func TestGet(t *testing.T) {
 			Filter:   s("  "),
 			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote, &modelTimeSpan1},
 		},
+		{
+			// both terms in the note (independent words, AND)
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("important meeting"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			// one term matches the note, the other a tag value
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("meeting alpha"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			// every term must match; second term matches nothing
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("meeting zzznomatch"),
+			Expected: nil,
+		},
+		{
+			// surrounding / repeated whitespace between terms is ignored
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("  MEETING   alpha  "),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
 	}
 
 	for i, testData := range d {
