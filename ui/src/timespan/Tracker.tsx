@@ -67,7 +67,7 @@ export const Tracker: React.FC<TrackerProps> = ({
             if (!data || !data.createTimeSpan) {
                 return;
             }
-            addTimeSpanToCache(cache, data.createTimeSpan);
+            addTimeSpanToCache(cache, data.createTimeSpan, filterText);
         },
     });
     const {enqueueSnackbar} = useSnackbar();

@@ -8,7 +8,7 @@ import {TimeSpan} from './TimeSpan';
 import {toTimeSpanProps} from './timespanutils';
 import {Typography} from '@material-ui/core';
 
-export const ActiveTrackers = () => {
+export const ActiveTrackers: React.FC<{filter?: string}> = ({filter}) => {
     const trackersResult = useQuery<Trackers>(gqlTimeSpan.Trackers, {fetchPolicy: 'cache-and-network'});
     const tagsResult = useQuery<Tags>(gqlTag.Tags, {fetchPolicy: 'cache-and-network'});
     const values = React.useMemo(() => {
@@ -37,7 +37,7 @@ export const ActiveTrackers = () => {
                 Active Timers
             </Typography>
             {values.map((value) => {
-                return <TimeSpan key={value.id} {...value} />;
+                return <TimeSpan key={value.id} {...value} filter={filter} />;
             })}
         </div>
     );

@@ -11,7 +11,7 @@ export const DailyPage = () => {
     return (
         <div style={{margin: '1px auto', maxWidth: 1000}}>
             <Tracker selectedEntries={selectedEntries} onSelectedEntriesChanged={setSelectedEntries} onFilterChange={setFilter} />
-            <ActiveTrackers />
+            <ActiveTrackers filter={filter} />
             <DoneTrackers
                 filter={filter}
                 addTagsToTracker={

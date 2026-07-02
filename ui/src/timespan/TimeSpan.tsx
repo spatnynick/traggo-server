@@ -40,6 +40,7 @@ export interface TimeSpanProps {
     continued?: () => void;
     addTagsToTracker?: (tags: TagSelectorEntry[]) => void;
     elevation?: number;
+    filter?: string;
 }
 
 const useStyles = makeStyles(() => ({
@@ -95,6 +96,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         continued = () => {},
         elevation = 1,
         addTagsToTracker,
+        filter,
     }) => {
         const styles = useStyles();
         const theme = useTheme();
@@ -112,7 +114,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                     return;
                 }
                 removeFromTrackersCache(cache, data);
-                addTimeSpanToCache(cache, data.stopTimeSpan);
+                addTimeSpanToCache(cache, data.stopTimeSpan, filter);
             },
         });
         const [startTimer] = useMutation<StartTimer, StartTimerVariables>(gqlTimeSpan.StartTimer, {
@@ -127,7 +129,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
             update: (cache, {data}) => {
                 let oldData: TimeSpans | null = null;
                 try {
-                    oldData = cache.readQuery<TimeSpans>({query: gqlTimeSpan.TimeSpans});
+                    oldData = cache.readQuery<TimeSpans>({query: gqlTimeSpan.TimeSpans, variables: {filter}});
                 } catch (e) {}
 
                 const oldTrackers = cache.readQuery<Trackers>({query: gqlTimeSpan.Trackers});
@@ -146,6 +148,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                 if (oldData) {
                     cache.writeQuery<TimeSpans>({
                         query: gqlTimeSpan.TimeSpans,
+                        variables: {filter},
                         data: {
                             timeSpans: {
                                 __typename: 'PagedTimeSpans',
