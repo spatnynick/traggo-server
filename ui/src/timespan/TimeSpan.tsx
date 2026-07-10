@@ -22,6 +22,7 @@ import {Trackers} from '../gql/__generated__/Trackers';
 import {addTimeSpanToCache, removeFromTrackersCache} from '../gql/utils';
 import {StartTimer, StartTimerVariables} from '../gql/__generated__/StartTimer';
 import {RelativeTime, RelativeToNow} from '../common/RelativeTime';
+import {useConnection} from '../provider/ConnectionProvider';
 
 interface Range {
     from: moment.Moment;
@@ -97,6 +98,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         addTagsToTracker,
     }) => {
         const styles = useStyles();
+        const {online} = useConnection();
         const [showNotes, toggleShowingNotes] = React.useState(initialNote !== '');
         const note = React.useRef<{value: string; handle?: number}>({value: initialNote});
 
@@ -185,7 +187,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                     flexDirection: 'column',
                     padding: '10px',
                     margin: '10px 0',
-                    opacity: wasMoved ? 0.5 : 1,
+                    opacity: wasMoved || (to === undefined && !online) ? 0.5 : 1,
                     width: '100%',
                 }}>
                 <div className={styles.innerTimespan}>

@@ -5,6 +5,7 @@ import 'react-grid-layout/css/styles.css';
 import 'typeface-roboto';
 import {ThemeProvider} from './provider/ThemeProvider';
 import {ApolloProvider} from './provider/ApolloProvider';
+import {ConnectionProvider} from './provider/ConnectionProvider';
 import {SnackbarProvider} from './provider/SnackbarProvider';
 import {MuiPickersUtilsProvider} from '@material-ui/pickers';
 import MomentUtils from '@date-io/moment';
@@ -15,17 +16,19 @@ import {BootUserSettings} from './provider/UserSettingsProvider';
 export const Root = () => {
     return (
         <ApolloProvider>
-            <BootUserSettings>
-                <ThemeProvider>
-                    <MuiPickersUtilsProvider utils={MomentUtils}>
-                        <SnackbarProvider>
-                            <HashRouter>
-                                <Router />
-                            </HashRouter>
-                        </SnackbarProvider>
-                    </MuiPickersUtilsProvider>
-                </ThemeProvider>
-            </BootUserSettings>
+            <ConnectionProvider>
+                <BootUserSettings>
+                    <ThemeProvider>
+                        <MuiPickersUtilsProvider utils={MomentUtils}>
+                            <SnackbarProvider>
+                                <HashRouter>
+                                    <Router />
+                                </HashRouter>
+                            </SnackbarProvider>
+                        </MuiPickersUtilsProvider>
+                    </ThemeProvider>
+                </BootUserSettings>
+            </ConnectionProvider>
         </ApolloProvider>
     );
 };
