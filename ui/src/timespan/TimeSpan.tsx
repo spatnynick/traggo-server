@@ -29,6 +29,15 @@ interface Range {
     to?: moment.Moment;
 }
 
+const TIME_UPDATE_DELAY = 250;
+
+const cloneRange = (range: Range): Range => ({
+    from: range.from.clone(),
+    to: range.to && range.to.clone(),
+});
+
+const isValidRange = (range: Range): boolean => !range.to || range.from.isBefore(range.to);
+
 export interface TimeSpanProps {
     id: number;
     range: Range & {oldFrom?: moment.Moment};
@@ -105,6 +114,25 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         const {online} = useConnection();
         const [showNotes, toggleShowingNotes] = React.useState(initialNote !== '');
         const note = React.useRef<{value: string; handle?: number}>({value: initialNote});
+        const [draftRangeState, setDraftRangeState] = React.useState<Range>(() => cloneRange({from, to}));
+        const draftRange = React.useRef(draftRangeState);
+        const timeUpdate = React.useRef<{range?: Range; handle?: number}>({});
+        const setDraftRange = (range: Range) => {
+            draftRange.current = range;
+            setDraftRangeState(range);
+        };
+
+        React.useEffect(() => {
+            if (timeUpdate.current.handle === undefined && !timeUpdate.current.range) {
+                setDraftRange(cloneRange({from, to}));
+            }
+        }, [from, to]);
+        React.useEffect(
+            () => () => {
+                window.clearTimeout(timeUpdate.current.handle);
+            },
+            []
+        );
 
         const [selectedEntries, setSelectedEntries] = React.useState<TagSelectorEntry[]>(initialTags);
         const [openMenu, setOpenMenu] = useStateAndDelegateWithDelayOnChange<null | HTMLElement>(null, (o) =>
@@ -123,9 +151,39 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
             refetchQueries: [{query: gqlTimeSpan.Trackers}],
         });
         const [updateTimeSpan] = useMutation<UpdateTimeSpan, UpdateTimeSpanVariables>(gqlTimeSpan.UpdateTimeSpan);
+        const cancelTimeUpdate = () => {
+            window.clearTimeout(timeUpdate.current.handle);
+            timeUpdate.current = {};
+        };
         const noteAwareUpdateTimeSpan = ({variables}: {variables: Omit<UpdateTimeSpanVariables, 'note'>}) => {
+            cancelTimeUpdate();
             clearTimeout(note.current.handle);
             return updateTimeSpan({variables: {...variables, note: note.current.value}});
+        };
+        const scheduleTimeUpdate = (nextRange: Range) => {
+            cancelTimeUpdate();
+            if (!isValidRange(nextRange)) {
+                return;
+            }
+
+            timeUpdate.current.range = cloneRange(nextRange);
+            timeUpdate.current.handle = window.setTimeout(() => {
+                const range = timeUpdate.current.range;
+                timeUpdate.current = {};
+                if (!range || !isValidRange(range)) {
+                    return;
+                }
+
+                noteAwareUpdateTimeSpan({
+                    variables: {
+                        oldStart: oldFrom,
+                        id,
+                        start: inUserTz(range.from).format(),
+                        end: range.to && inUserTz(range.to).format(),
+                        tags: toInputTags(selectedEntries),
+                    },
+                }).then(() => rangeChange(range));
+            }, TIME_UPDATE_DELAY);
         };
         const [removeTimeSpan] = useMutation<RemoveTimeSpan, RemoveTimeSpanVariables>(gqlTimeSpan.RemoveTimeSpan, {
             update: (cache, {data}) => {
@@ -164,26 +222,31 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         });
 
         const updateNote = (newValue: string) => {
+            cancelTimeUpdate();
             window.clearTimeout(note.current.handle);
-            const handle = window.setTimeout(
-                () =>
-                    updateTimeSpan({
-                        variables: {
-                            oldStart: oldFrom,
-                            id,
-                            start: inUserTz(from).format(),
-                            end: to && inUserTz(to).format(),
-                            tags: toInputTags(selectedEntries),
-                            note: newValue,
-                        },
-                    }),
-                200
-            );
+            const handle = window.setTimeout(() => {
+                const range = draftRange.current;
+                if (!isValidRange(range)) {
+                    return;
+                }
+                updateTimeSpan({
+                    variables: {
+                        oldStart: oldFrom,
+                        id,
+                        start: inUserTz(range.from).format(),
+                        end: range.to && inUserTz(range.to).format(),
+                        tags: toInputTags(selectedEntries),
+                        note: newValue,
+                    },
+                });
+            }, 200);
             note.current = {handle, value: newValue};
         };
 
-        const wasMoved = !isSameDate(from, oldFrom);
-        const showDate = to !== undefined && (!isSameDate(from, to) || wasMoved);
+        const currentRange = timeUpdate.current.range || draftRange.current;
+        const invalidTimeRange = !isValidRange(draftRangeState);
+        const wasMoved = !isSameDate(draftRangeState.from, oldFrom);
+        const showDate = draftRangeState.to !== undefined && (!isSameDate(draftRangeState.from, draftRangeState.to) || wasMoved);
         return (
             <Paper
                 elevation={running ? Math.max(elevation, 6) : elevation}
@@ -203,12 +266,15 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                             selectedEntries={selectedEntries}
                             onSelectedEntriesChanged={(entries) => {
                                 setSelectedEntries(entries);
+                                if (!isValidRange(currentRange)) {
+                                    return;
+                                }
                                 noteAwareUpdateTimeSpan({
                                     variables: {
                                         oldStart: oldFrom,
                                         id,
-                                        start: inUserTz(from).format(),
-                                        end: to && inUserTz(to).format(),
+                                        start: inUserTz(currentRange.from).format(),
+                                        end: currentRange.to && inUserTz(currentRange.to).format(),
                                         tags: toInputTags(entries),
                                     },
                                 });
@@ -220,34 +286,18 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                         <div style={{alignItems: 'center', display: 'flex', justifyContent: 'space-evenly', flexWrap: 'wrap'}}>
                             <DateTimeSelector
                                 popoverOpen={dateSelectorOpen}
-                                selectedDate={from}
+                                selectedDate={draftRangeState.from}
+                                error={invalidTimeRange}
                                 onSelectDate={(newFrom) => {
                                     if (!newFrom.isValid()) {
                                         return;
                                     }
-                                    newFrom.set({second: 0});
-                                    if (to && moment(newFrom).isAfter(to)) {
-                                        const newTo = moment(newFrom).add(15, 'minute');
-                                        noteAwareUpdateTimeSpan({
-                                            variables: {
-                                                oldStart: oldFrom,
-                                                id,
-                                                start: inUserTz(newFrom).format(),
-                                                end: inUserTz(newTo).format(),
-                                                tags: toInputTags(selectedEntries),
-                                            },
-                                        }).then(() => rangeChange({from: newFrom, to: newTo}));
-                                    } else {
-                                        noteAwareUpdateTimeSpan({
-                                            variables: {
-                                                id,
-                                                oldStart: oldFrom,
-                                                start: inUserTz(newFrom).format(),
-                                                end: to && inUserTz(to).format(),
-                                                tags: toInputTags(selectedEntries),
-                                            },
-                                        }).then(() => rangeChange({from: newFrom, to}));
-                                    }
+                                    const nextRange = {
+                                        from: newFrom.clone().set({second: 0}),
+                                        to: draftRange.current.to,
+                                    };
+                                    setDraftRange(nextRange);
+                                    scheduleTimeUpdate(nextRange);
                                 }}
                                 showDate={showDate}
                                 label="start"
@@ -255,34 +305,18 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                             {to !== undefined ? (
                                 <DateTimeSelector
                                     popoverOpen={dateSelectorOpen}
-                                    selectedDate={to}
+                                    selectedDate={draftRangeState.to!}
+                                    error={invalidTimeRange}
                                     onSelectDate={(newTo) => {
                                         if (!newTo.isValid()) {
                                             return;
                                         }
-                                        newTo.set({second: 0});
-                                        if (moment(newTo).isBefore(from)) {
-                                            const newFrom = moment(newTo).subtract(15, 'minute');
-                                            noteAwareUpdateTimeSpan({
-                                                variables: {
-                                                    id,
-                                                    oldStart: oldFrom,
-                                                    start: inUserTz(newFrom).format(),
-                                                    end: inUserTz(newTo).format(),
-                                                    tags: toInputTags(selectedEntries),
-                                                },
-                                            }).then(() => rangeChange({from: newFrom, to: newTo}));
-                                        } else {
-                                            noteAwareUpdateTimeSpan({
-                                                variables: {
-                                                    id,
-                                                    oldStart: oldFrom,
-                                                    start: inUserTz(from).format(),
-                                                    end: inUserTz(newTo).format(),
-                                                    tags: toInputTags(selectedEntries),
-                                                },
-                                            }).then(() => rangeChange({from, to: newTo}));
-                                        }
+                                        const nextRange = {
+                                            from: draftRange.current.from,
+                                            to: newTo.clone().set({second: 0}),
+                                        };
+                                        setDraftRange(nextRange);
+                                        scheduleTimeUpdate(nextRange);
                                     }}
                                     showDate={showDate}
                                     label="end"
@@ -298,6 +332,11 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                                 </Button>
                             )}
                         </div>
+                        {invalidTimeRange ? (
+                            <Typography color="error" variant="caption">
+                                Start must be before End
+                            </Typography>
+                        ) : null}
 
                         <div style={{alignItems: 'center', display: 'flex'}}>
                             <Typography

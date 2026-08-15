@@ -2,7 +2,7 @@ import * as React from 'react';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
-import {Button, Input} from '@material-ui/core';
+import {Button, Input, Typography} from '@material-ui/core';
 import {MoreVert, Search, Close} from '@material-ui/icons';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
@@ -80,6 +80,10 @@ export const Tracker: React.FC<TrackerProps> = ({
     }, [showDate, from, to]);
 
     const submit = () => {
+        if (type === Type.Manual && !from.isBefore(to)) {
+            enqueueSnackbar('start must be before end', {variant: 'error'});
+            return;
+        }
         const tags = selectedEntries.map(
             (entry: TagSelectorEntry): InputTimeSpanTag => ({key: entry.tag.key, value: entry.value})
         );
@@ -133,13 +137,7 @@ export const Tracker: React.FC<TrackerProps> = ({
                                     return;
                                 }
                                 setFrom(newFrom);
-                                if (moment(newFrom).isAfter(to)) {
-                                    const newTo = moment(newFrom).add(15, 'minute');
-                                    setTo(newTo);
-                                    setShowDate(calcShowDate(newFrom, newTo));
-                                } else {
-                                    setShowDate(calcShowDate(newFrom, to));
-                                }
+                                setShowDate(calcShowDate(newFrom, to));
                             }}
                             showDate={showDate}
                             label="start"
@@ -151,21 +149,24 @@ export const Tracker: React.FC<TrackerProps> = ({
                                     return;
                                 }
                                 setTo(newTo);
-                                if (moment(newTo).isBefore(from)) {
-                                    const newFrom = moment(newTo).subtract(15, 'minute');
-                                    setFrom(newFrom);
-                                    setShowDate(calcShowDate(newFrom, newTo));
-                                } else {
-                                    setShowDate(calcShowDate(from, newTo));
-                                }
+                                setShowDate(calcShowDate(from, newTo));
                             }}
                             showDate={showDate}
                             label="end"
                         />
+                        {!from.isBefore(to) ? (
+                            <Typography color="error" variant="caption">
+                                Start must be before End
+                            </Typography>
+                        ) : null}
                     </div>
                 ) : null}
                 {!filterMode ? (
-                    <Button variant="text" style={{height: 50}} onClick={submit}>
+                    <Button
+                        variant="text"
+                        style={{height: 50}}
+                        disabled={type === Type.Manual && !from.isBefore(to)}
+                        onClick={submit}>
                         {type === Type.Manual ? 'add' : 'start'}
                     </Button>
                 ) : null}
