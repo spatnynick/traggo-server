@@ -123,7 +123,10 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         };
 
         React.useEffect(() => {
-            if (timeUpdate.current.handle === undefined && !timeUpdate.current.range) {
+            // Never resync from the server while an edit is pending or while the draft is
+            // invalid — a background refetch would otherwise silently discard what was typed.
+            const pending = timeUpdate.current.handle !== undefined || Boolean(timeUpdate.current.range);
+            if (!pending && isValidRange(draftRange.current)) {
                 setDraftRange(cloneRange({from, to}));
             }
         }, [from, to]);
