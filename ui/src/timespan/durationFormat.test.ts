@@ -46,7 +46,9 @@ describe('formatDuration', () => {
 
     it('withSeconds surfaces seconds in the presets that have a seconds slot (running timers)', () => {
         // DaysHours: allow a third unit so seconds show and the tick is visible
-        expect(formatDuration(shortSpan + 23, DurationFormat.DaysHours, '', {unitCount: 2, withSeconds: true})).toBe('1h 30m 23s');
+        expect(formatDuration(shortSpan + 23, DurationFormat.DaysHours, '', {unitCount: 2, withSeconds: true})).toBe(
+            '1h 30m 23s'
+        );
         expect(formatDuration(45 * 60 + 9, DurationFormat.DaysHours, '', {unitCount: 2, withSeconds: true})).toBe('45m 9s');
         // HHMM gains a seconds field
         expect(formatDuration(shortSpan + 23, DurationFormat.HHMM, '', {withSeconds: true})).toBe('1:30:23');

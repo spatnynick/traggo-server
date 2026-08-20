@@ -305,7 +305,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                             {to !== undefined ? (
                                 <DateTimeSelector
                                     popoverOpen={dateSelectorOpen}
-                                    selectedDate={draftRangeState.to!}
+                                    selectedDate={draftRangeState.to || to}
                                     error={invalidTimeRange}
                                     onSelectDate={(newTo) => {
                                         if (!newTo.isValid()) {

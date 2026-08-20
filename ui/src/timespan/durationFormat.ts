@@ -44,8 +44,10 @@ const split = (totalSeconds: number): Parts => {
 // is stripped (the list view did this with .substring(1)).
 const daysHours = (p: Parts, legacy?: LegacyOptions): string => prettyMs(p.totalSeconds * 1000, legacy).replace(/^~/, '');
 
-const goStyle = (p: Parts, withSeconds?: boolean): string =>
-    `${p.totalHours}h${p.minutesOfHour}m${withSeconds ? `${p.secondsOfMinute}s` : ''}`;
+const goStyle = (p: Parts, withSeconds = false): string => {
+    const seconds = withSeconds ? `${p.secondsOfMinute}s` : '';
+    return `${p.totalHours}h${p.minutesOfHour}m${seconds}`;
+};
 
 // Custom strftime-like tokens (see SettingsPage help text):
 //   %d days · %H total hours · %h hours-of-day (2) · %m total minutes
@@ -95,10 +97,13 @@ const goCustom = (p: Parts, pattern: string): string => {
 
 export const formatDuration = (totalSeconds: number, format: DurationFormat, custom: string, legacy?: LegacyOptions): string => {
     const p = split(totalSeconds);
-    const withSeconds = legacy && legacy.withSeconds;
+    const withSeconds = Boolean(legacy && legacy.withSeconds);
+    const unitCount = (legacy && legacy.unitCount) || 2;
     switch (format) {
-        case DurationFormat.HHMM:
-            return `${p.totalHours}:${pad2(p.minutesOfHour)}${withSeconds ? `:${pad2(p.secondsOfMinute)}` : ''}`;
+        case DurationFormat.HHMM: {
+            const seconds = withSeconds ? `:${pad2(p.secondsOfMinute)}` : '';
+            return `${p.totalHours}:${pad2(p.minutesOfHour)}${seconds}`;
+        }
         case DurationFormat.DecimalHours:
             return `${(p.totalSeconds / 3600).toFixed(2)}h`;
         case DurationFormat.GoStyle:
@@ -111,7 +116,7 @@ export const formatDuration = (totalSeconds: number, format: DurationFormat, cus
         default:
             // pretty-ms truncates to the two largest units; while running, allow a third
             // so the seconds surface (e.g. "1h 5m 23s") and the tick is visible.
-            return daysHours(p, withSeconds ? {...legacy, unitCount: ((legacy && legacy.unitCount) || 2) + 1} : legacy);
+            return daysHours(p, withSeconds ? {...legacy, unitCount: unitCount + 1} : legacy);
     }
 };
 

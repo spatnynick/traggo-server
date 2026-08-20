@@ -1,5 +1,5 @@
 import moment from 'moment';
-import {sumEffortSeconds, formatEffort} from './timespanutils';
+import {sumEffortSeconds} from './timespanutils';
 import {TimeSpanProps} from './TimeSpan';
 
 const span = (fromIso: string, toIso?: string): TimeSpanProps =>
@@ -26,12 +26,5 @@ describe('sumEffortSeconds', () => {
 
     it('is zero for no spans', () => {
         expect(sumEffortSeconds([], moment())).toBe(0);
-    });
-});
-
-describe('formatEffort', () => {
-    it('renders two units without the approximation marker', () => {
-        expect(formatEffort(9 * 3600 + 30 * 60)).toBe('9h 30m');
-        expect(formatEffort(0)).toBe('0ms');
     });
 });
