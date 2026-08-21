@@ -62,6 +62,18 @@ type RootQuery {
     version: Version!
     dashboards: [Dashboard!] @hasRole(role: USER)
     userSettings: UserSettings!
+    status: Status! @hasRole(role: USER)
+}
+
+type Status {
+    serverTime: Time!
+    version: Version!
+    runningTimers: [RunningTimer!]!
+}
+
+type RunningTimer {
+    id: Int!
+    start: Time!
 }
 
 input InputUserSettings {
