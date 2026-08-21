@@ -3,6 +3,7 @@ package timespan
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/traggo/server/auth"
 	"github.com/traggo/server/generated/gqlmodel"
@@ -10,7 +11,7 @@ import (
 )
 
 // TimeSpans returns all time spans for a user
-func (r *ResolverForTimeSpan) TimeSpans(ctx context.Context, fromInclusive *model.Time, toInclusive *model.Time, cursor *gqlmodel.InputCursor) (*gqlmodel.PagedTimeSpans, error) {
+func (r *ResolverForTimeSpan) TimeSpans(ctx context.Context, fromInclusive *model.Time, toInclusive *model.Time, cursor *gqlmodel.InputCursor, filter *string) (*gqlmodel.PagedTimeSpans, error) {
 	user := auth.GetUser(ctx)
 	cursor = normalize(cursor)
 
@@ -38,6 +39,19 @@ func (r *ResolverForTimeSpan) TimeSpans(ctx context.Context, fromInclusive *mode
 		}
 	} else if toInclusive != nil {
 		call = call.Where("end_user_time <= ? OR start_user_time <= ?", toInclusive.OmitTimeZone(), toInclusive.OmitTimeZone())
+	}
+
+	if filter != nil {
+		// Each whitespace-separated term must match (AND); within a term, it may match the
+		// note or any tag key/value (OR). So "AP2 SNC" finds a note containing both words.
+		for _, term := range strings.Fields(strings.ToLower(*filter)) {
+			like := "%" + term + "%"
+			call = call.Where(
+				"LOWER(note) LIKE ? OR EXISTS("+
+					"SELECT 1 FROM time_span_tags tst WHERE tst.time_span_id = time_spans.id "+
+					"AND (LOWER(tst.key) LIKE ? OR LOWER(tst.string_value) LIKE ?))",
+				like, like, like)
+		}
 	}
 
 	var timeSpans []model.TimeSpan

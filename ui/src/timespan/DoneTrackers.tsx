@@ -15,11 +15,12 @@ import {isSameDate} from '../utils/time';
 
 interface DoneTrackersProps {
     addTagsToTracker?: (entries: TagSelectorEntry[]) => void;
+    filter?: string;
 }
 
-export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) => {
+export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker, filter}) => {
     const trackersResult = useQuery<TimeSpans, TimeSpansVariables>(gqlTimeSpan.TimeSpans, {
-        variables: {cursor: {pageSize: 30}},
+        variables: {cursor: {pageSize: 30}, filter},
     });
     const loading = React.useRef(false);
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
@@ -50,6 +51,7 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
                         offset,
                         pageSize,
                     },
+                    filter,
                 },
                 updateQuery: (prev, {fetchMoreResult}): TimeSpans => {
                     if (!fetchMoreResult) {

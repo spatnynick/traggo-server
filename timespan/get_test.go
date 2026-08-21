@@ -123,6 +123,28 @@ var (
 			{Key: "test2"},
 		},
 	}
+	timeSpanNote = &model.TimeSpan{
+		ID:            7,
+		UserID:        5,
+		StartUserTime: test.Time("2019-06-10T19:30:00Z"),
+		EndUserTime:   test.TimeP("2019-06-10T19:40:00Z"),
+		StartUTC:      test.Time("2019-06-10T19:30:00Z"),
+		EndUTC:        test.TimeP("2019-06-10T19:40:00Z"),
+		OffsetUTC:     0,
+		Note:          "important meeting",
+		Tags: []model.TimeSpanTag{
+			{Key: "project", StringValue: "alpha"},
+		},
+	}
+	modelTimeSpanNote = gqlmodel.TimeSpan{
+		ID:    7,
+		Start: test.ModelTime("2019-06-10T19:30:00Z"),
+		End:   test.ModelTimeP("2019-06-10T19:40:00Z"),
+		Note:  "important meeting",
+		Tags: []*gqlmodel.TimeSpanTag{
+			{Key: "project", Value: "alpha"},
+		},
+	}
 	timeSpanOtherUser = &model.TimeSpan{
 		ID:            6,
 		UserID:        2,
@@ -142,6 +164,7 @@ type data struct {
 	DB       []*model.TimeSpan
 	From     *model.Time
 	To       *model.Time
+	Filter   *string
 	Expected []*gqlmodel.TimeSpan
 	Cursor   *gqlmodel.InputCursor
 }
@@ -238,6 +261,60 @@ func TestGet(t *testing.T) {
 			To:       test.ModelTimeP("2019-06-11T19:00:00Z"),
 			Expected: nil,
 		},
+		{
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("meeting"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("MEETING"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("alpha"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("test"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpan1},
+		},
+		{
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("zzznomatch"),
+			Expected: nil,
+		},
+		{
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("  "),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote, &modelTimeSpan1},
+		},
+		{
+			// both terms in the note (independent words, AND)
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("important meeting"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			// one term matches the note, the other a tag value
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("meeting alpha"),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
+		{
+			// every term must match; second term matches nothing
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("meeting zzznomatch"),
+			Expected: nil,
+		},
+		{
+			// surrounding / repeated whitespace between terms is ignored
+			DB:       []*model.TimeSpan{timeSpan1, timeSpanNote},
+			Filter:   s("  MEETING   alpha  "),
+			Expected: []*gqlmodel.TimeSpan{&modelTimeSpanNote},
+		},
 	}
 
 	for i, testData := range d {
@@ -251,7 +328,7 @@ func TestGet(t *testing.T) {
 			}
 
 			resolver := ResolverForTimeSpan{DB: db.DB}
-			timeSpans, err := resolver.TimeSpans(fake.User(5), testData.From, testData.To, testData.Cursor)
+			timeSpans, err := resolver.TimeSpans(fake.User(5), testData.From, testData.To, testData.Cursor, testData.Filter)
 
 			require.NoError(t, err)
 			require.Equal(t, testData.Expected, timeSpans.TimeSpans)
@@ -265,11 +342,15 @@ func TestGet_fail_toBeforeStart(t *testing.T) {
 
 	resolver := ResolverForTimeSpan{DB: db.DB}
 	timeSpans, err := resolver.TimeSpans(fake.User(5), test.ModelTimeP("2019-06-10T18:30:00+02:00"),
-		test.ModelTimeP("2019-06-10T17:30:00+02:00"), nil)
+		test.ModelTimeP("2019-06-10T17:30:00+02:00"), nil, nil)
 	require.Nil(t, timeSpans)
 	require.EqualError(t, err, "fromInclusive must be before toInclusive")
 }
 
 func p(i int) *int {
 	return &i
+}
+
+func s(str string) *string {
+	return &str
 }
