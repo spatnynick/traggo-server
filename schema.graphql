@@ -69,6 +69,8 @@ input InputUserSettings {
     dateLocale: DateLocale!
     firstDayOfTheWeek: WeekDay!
     dateTimeInputStyle: DateTimeInputStyle!
+    durationFormat: DurationFormat!
+    durationCustomFormat: String!
 }
 
 type UserSettings {
@@ -76,6 +78,8 @@ type UserSettings {
     dateLocale: DateLocale!
     firstDayOfTheWeek: WeekDay!
     dateTimeInputStyle: DateTimeInputStyle!
+    durationFormat: DurationFormat!
+    durationCustomFormat: String!
 }
 
 enum WeekDay {
@@ -92,6 +96,10 @@ enum DateLocale {
 
 enum DateTimeInputStyle {
     Fancy, Native
+}
+
+enum DurationFormat {
+    DaysHours, HHMM, DecimalHours, GoStyle, CustomStrftime, CustomGo
 }
 
 input InputReplaceOptions {

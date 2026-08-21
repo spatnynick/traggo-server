@@ -1,15 +1,34 @@
 import * as React from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import {Paper} from '@material-ui/core';
+import {Paper, TextField} from '@material-ui/core';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
 import {useMutation} from '@apollo/react-hooks';
 import {SetSettings, SetSettingsVariables} from '../gql/__generated__/SetSettings';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import Select from '@material-ui/core/NativeSelect/NativeSelect';
-import {DateLocale, Theme, WeekDay, DateTimeInputStyle} from '../gql/__generated__/globalTypes';
+import {DateLocale, Theme, WeekDay, DateTimeInputStyle, DurationFormat} from '../gql/__generated__/globalTypes';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
+
+const durationFormatLabels: Record<DurationFormat, string> = {
+    [DurationFormat.DaysHours]: 'Days + hours (9d 9h)',
+    [DurationFormat.HHMM]: 'Hours:minutes (225:00)',
+    [DurationFormat.DecimalHours]: 'Decimal hours (225.00h)',
+    [DurationFormat.GoStyle]: 'Go style (225h0m)',
+    [DurationFormat.CustomStrftime]: 'Custom (strftime-like)…',
+    [DurationFormat.CustomGo]: 'Custom (Go-style)…',
+};
+
+const isCustomDurationFormat = (format: DurationFormat): boolean =>
+    format === DurationFormat.CustomStrftime || format === DurationFormat.CustomGo;
+
+const durationCustomHelp: Record<string, string> = {
+    [DurationFormat.CustomStrftime]:
+        'Tokens: %d days, %H total hours, %h hours-of-day, %m total minutes, %M minutes-of-hour, %s total seconds, %S seconds-of-minute, %% literal. e.g. %H:%M',
+    [DurationFormat.CustomGo]: 'Unit letters to show, largest first: d h m s. e.g. "dhm" → 9d9h0m, "hm" → 225h0m',
+};
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -25,6 +44,10 @@ export const SettingsPage: React.FC = () => {
     const classes = useStyles();
     const {done, ...settings} = useSettings();
     const {enqueueSnackbar} = useSnackbar();
+    const [customFormat, setCustomFormat] = React.useState(settings.durationCustomFormat);
+    React.useEffect(() => {
+        setCustomFormat(settings.durationCustomFormat);
+    }, [settings.durationCustomFormat]);
     const [setSettings] = useMutation<SetSettings, SetSettingsVariables>(SetSettingsGQL, {
         refetchQueries: [{query: SettingsGQL}],
     });
@@ -148,6 +171,63 @@ export const SettingsPage: React.FC = () => {
                     ))}
                 </Select>
             </FormControl>
+            <FormControl margin={'normal'} fullWidth>
+                <InputLabel>Duration format</InputLabel>
+                <Select
+                    fullWidth
+                    value={settings.durationFormat}
+                    onChange={(e) => {
+                        setSettings({
+                            variables: {
+                                settings: {
+                                    ...settings,
+                                    durationFormat: e.target.value as DurationFormat,
+                                },
+                            },
+                        })
+                            .then(() =>
+                                enqueueSnackbar('duration format changed', {
+                                    variant: 'success',
+                                })
+                            )
+                            .catch(handleError('set duration format', enqueueSnackbar));
+                    }}>
+                    {Object.values(DurationFormat).map((type) => (
+                        <option key={type} value={type}>
+                            {durationFormatLabels[type]}
+                        </option>
+                    ))}
+                </Select>
+            </FormControl>
+            {isCustomDurationFormat(settings.durationFormat) && (
+                <FormControl margin={'normal'} fullWidth>
+                    <TextField
+                        label="Custom duration pattern"
+                        value={customFormat}
+                        onChange={(e) => setCustomFormat(e.target.value)}
+                        onBlur={() => {
+                            if (customFormat === settings.durationCustomFormat) {
+                                return;
+                            }
+                            setSettings({
+                                variables: {
+                                    settings: {
+                                        ...settings,
+                                        durationCustomFormat: customFormat,
+                                    },
+                                },
+                            })
+                                .then(() =>
+                                    enqueueSnackbar('duration pattern changed', {
+                                        variant: 'success',
+                                    })
+                                )
+                                .catch(handleError('set duration pattern', enqueueSnackbar));
+                        }}
+                    />
+                    <FormHelperText>{durationCustomHelp[settings.durationFormat]}</FormHelperText>
+                </FormControl>
+            )}
         </Paper>
     );
 };

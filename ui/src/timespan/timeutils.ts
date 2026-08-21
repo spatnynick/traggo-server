@@ -1,11 +1,6 @@
 import moment from 'moment-timezone';
 import prettyMs from 'pretty-ms';
 
-export const timeRunning = (date: moment.Moment, now: moment.Moment) => {
-    const d = inUserTz(now).unix() - inUserTz(date).unix();
-    return prettyMs(d * 1000, {unitCount: 2}).substring(1);
-};
-
 export const timeRunningCalendar = (date: moment.Moment, now: moment.Moment) => {
     const d = inUserTz(now).unix() - inUserTz(date).unix();
 

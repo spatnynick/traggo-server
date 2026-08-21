@@ -12,11 +12,13 @@ import (
 // SetUserSettings sets the user settings.
 func (r *ResolverForSettings) SetUserSettings(ctx context.Context, settings gqlmodel.InputUserSettings) (*gqlmodel.UserSettings, error) {
 	internal := model.UserSetting{
-		Theme:              toInternalTheme(settings.Theme),
-		FirstDayOfTheWeek:  toInternalWeekday(settings.FirstDayOfTheWeek).String(),
-		UserID:             auth.GetUser(ctx).ID,
-		DateLocale:         toInternalDateLocale(settings.DateLocale),
-		DateTimeInputStyle: toInternalDateTimeInputStyle(settings.DateTimeInputStyle),
+		Theme:                toInternalTheme(settings.Theme),
+		FirstDayOfTheWeek:    toInternalWeekday(settings.FirstDayOfTheWeek).String(),
+		UserID:               auth.GetUser(ctx).ID,
+		DateLocale:           toInternalDateLocale(settings.DateLocale),
+		DateTimeInputStyle:   toInternalDateTimeInputStyle(settings.DateTimeInputStyle),
+		DurationFormat:       toInternalDurationFormat(settings.DurationFormat),
+		DurationCustomFormat: settings.DurationCustomFormat,
 	}
 
 	save := r.DB.Save(internal)
@@ -32,11 +34,34 @@ func (r *ResolverForSettings) UserSettings(ctx context.Context) (*gqlmodel.UserS
 
 func toExternal(internal model.UserSetting) *gqlmodel.UserSettings {
 	return &gqlmodel.UserSettings{
-		Theme:              toExternalTheme(internal.Theme),
-		DateLocale:         toExternalDateLocale(internal.DateLocale),
-		FirstDayOfTheWeek:  toExternalWeekday(internal.FirstDayOfTheWeekTimeWeekday()),
-		DateTimeInputStyle: toExternalDateTimeInputStyle(internal.DateTimeInputStyle),
+		Theme:                toExternalTheme(internal.Theme),
+		DateLocale:           toExternalDateLocale(internal.DateLocale),
+		FirstDayOfTheWeek:    toExternalWeekday(internal.FirstDayOfTheWeekTimeWeekday()),
+		DateTimeInputStyle:   toExternalDateTimeInputStyle(internal.DateTimeInputStyle),
+		DurationFormat:       toExternalDurationFormat(internal.DurationFormat),
+		DurationCustomFormat: internal.DurationCustomFormat,
 	}
+}
+
+func toInternalDurationFormat(format gqlmodel.DurationFormat) string {
+	switch format {
+	case gqlmodel.DurationFormatDaysHours,
+		gqlmodel.DurationFormatHhmm,
+		gqlmodel.DurationFormatDecimalHours,
+		gqlmodel.DurationFormatGoStyle,
+		gqlmodel.DurationFormatCustomStrftime,
+		gqlmodel.DurationFormatCustomGo:
+		return format.String()
+	default:
+		return model.DurationFormatDaysHours
+	}
+}
+
+func toExternalDurationFormat(format string) gqlmodel.DurationFormat {
+	if gqlmodel.DurationFormat(format).IsValid() {
+		return gqlmodel.DurationFormat(format)
+	}
+	return gqlmodel.DurationFormatDaysHours
 }
 
 func toInternalDateLocale(locale gqlmodel.DateLocale) string {

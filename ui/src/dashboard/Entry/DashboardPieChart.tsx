@@ -3,14 +3,15 @@ import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps}
 import * as React from 'react';
 import {Colors} from './colors';
 import {Typography} from '@material-ui/core';
-import prettyMs from 'pretty-ms';
 import Paper from '@material-ui/core/Paper';
+import {useDurationFormatter} from '../../timespan/durationFormat';
 
 interface DashboardPieChartProps {
     entries: Stats_stats_entries[];
 }
 
 export const DashboardPieChart: React.FC<DashboardPieChartProps> = ({entries}) => {
+    const formatDuration = useDurationFormatter();
     const total = entries.map((e) => e.timeSpendInSeconds).reduce((x, y) => x + y, 0);
     return (
         <ResponsiveContainer>
@@ -30,7 +31,7 @@ export const DashboardPieChart: React.FC<DashboardPieChartProps> = ({entries}) =
                         <Cell key={index} fill={Colors[index % Colors.length]} />
                     ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip total={total} />} />
+                <Tooltip content={<CustomTooltip total={total} formatDuration={formatDuration} />} />
                 <Legend />
             </PieChart>
         </ResponsiveContainer>
@@ -39,15 +40,16 @@ export const DashboardPieChart: React.FC<DashboardPieChartProps> = ({entries}) =
 
 interface CustomTooltipProps extends TooltipProps {
     total: number;
+    formatDuration: (totalSeconds: number) => string;
 }
 
-const CustomTooltip = ({active, payload, total}: CustomTooltipProps) => {
+const CustomTooltip = ({active, payload, total, formatDuration}: CustomTooltipProps) => {
     if (active && payload) {
         const first = payload[0];
         return (
             <Paper style={{padding: 10}} elevation={4}>
                 <Typography>
-                    {first.payload.key}:{first.payload.value}: {prettyMs(first.payload.timeSpendInSeconds * 1000)} (
+                    {first.payload.key}:{first.payload.value}: {formatDuration(first.payload.timeSpendInSeconds)} (
                     {total > 0 ? ((first.payload.timeSpendInSeconds / total) * 100).toFixed(2) : '0.00'}%)
                 </Typography>
             </Paper>
