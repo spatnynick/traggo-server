@@ -4,7 +4,7 @@ import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
 import {DateTimeSelector} from '../common/DateTimeSelector';
-import {Button, TextField, Typography, makeStyles} from '@material-ui/core';
+import {Button, TextField, Typography, makeStyles, useTheme} from '@material-ui/core';
 import {inUserTz} from './timeutils';
 import {useMutation} from '@apollo/react-hooks';
 import {StopTimer, StopTimerVariables} from '../gql/__generated__/StopTimer';
@@ -97,6 +97,8 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         addTagsToTracker,
     }) => {
         const styles = useStyles();
+        const theme = useTheme();
+        const running = !to;
         const [showNotes, toggleShowingNotes] = React.useState(initialNote !== '');
         const note = React.useRef<{value: string; handle?: number}>({value: initialNote});
 
@@ -179,7 +181,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         const showDate = to !== undefined && (!isSameDate(from, to) || wasMoved);
         return (
             <Paper
-                elevation={elevation}
+                elevation={running ? Math.max(elevation, 6) : elevation}
                 style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -187,6 +189,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                     margin: '10px 0',
                     opacity: wasMoved ? 0.5 : 1,
                     width: '100%',
+                    borderLeft: running ? `10px solid ${theme.palette.primary.main}` : undefined,
                 }}>
                 <div className={styles.innerTimespan}>
                     <div className={styles.tagInput}>
@@ -281,6 +284,8 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                                 />
                             ) : (
                                 <Button
+                                    variant="contained"
+                                    color="primary"
                                     onClick={() => {
                                         stopTimer({variables: {id, end: inUserTz(moment()).format()}}).then(stopped);
                                     }}>
@@ -292,7 +297,11 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                         <div style={{alignItems: 'center', display: 'flex'}}>
                             <Typography
                                 variant="subtitle1"
-                                style={{minWidth: '70px'}}
+                                style={{
+                                    minWidth: '70px',
+                                    color: running ? theme.palette.primary.main : undefined,
+                                    fontWeight: running ? 'bold' : undefined,
+                                }}
                                 title="The amount of time between from and to">
                                 {to ? <RelativeTime from={from} to={to} /> : <RelativeToNow from={from} />}
                             </Typography>

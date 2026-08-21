@@ -138,8 +138,8 @@ const DatedTimeSpans: React.FC<{
     }, [ref, name, setHeight, height]);
     const dayEffort = formatEffort(sumEffortSeconds(timeSpans, moment()));
     return (
-        <div key={name} ref={(r) => (ref.current = r)}>
-            <Typography key={name} align="center" variant={'h5'}>
+        <div key={name} ref={(r) => (ref.current = r)} style={{paddingTop: 16, paddingBottom: 42}}>
+            <Typography key={name} align="center" variant={'h5'} style={{marginBottom: 8}}>
                 {name}
                 <Typography component="span" variant="body2" color="textSecondary" style={{marginLeft: 12}}>
                     total {dayEffort}
