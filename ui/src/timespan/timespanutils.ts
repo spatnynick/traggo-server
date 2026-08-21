@@ -2,6 +2,7 @@ import {Trackers_timers} from '../gql/__generated__/Trackers';
 import {Tags_tags} from '../gql/__generated__/Tags';
 import {toTagSelectorEntry} from '../tag/tagSelectorEntry';
 import moment from 'moment';
+import prettyMs from 'pretty-ms';
 import {TimeSpanProps} from './TimeSpan';
 import {TimeSpans_timeSpans_timeSpans} from '../gql/__generated__/TimeSpans';
 
@@ -41,6 +42,15 @@ const group = (startOfTomorrow: moment.Moment, startOfToday: moment.Moment, star
 };
 
 export type GroupedTimeSpanProps = Array<{key: string; timeSpans: TimeSpanProps[]}>;
+
+// Sum of effort (seconds) of the given time spans; running spans count up to now.
+export const sumEffortSeconds = (timeSpans: TimeSpanProps[], now: moment.Moment): number =>
+    timeSpans.reduce((acc, ts) => {
+        const to = ts.range.to || now;
+        return acc + Math.max(0, to.unix() - ts.range.from.unix());
+    }, 0);
+
+export const formatEffort = (seconds: number): string => prettyMs(seconds * 1000, {unitCount: 2}).replace(/^~/, '');
 
 export const toGroupedTimeSpanProps = (
     timeSpans: TimeSpans_timeSpans_timeSpans[],

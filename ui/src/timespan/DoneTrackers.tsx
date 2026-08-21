@@ -8,7 +8,7 @@ import useInterval from '@rooks/use-interval';
 import moment from 'moment';
 import {TimeSpans, TimeSpansVariables} from '../gql/__generated__/TimeSpans';
 import {Typography} from '@material-ui/core';
-import {GroupedTimeSpanProps, toGroupedTimeSpanProps} from './timespanutils';
+import {GroupedTimeSpanProps, toGroupedTimeSpanProps, sumEffortSeconds, formatEffort} from './timespanutils';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import ReactInfinite from 'react-infinite';
 import {isSameDate} from '../utils/time';
@@ -136,10 +136,14 @@ const DatedTimeSpans: React.FC<{
             setHeight((old) => ({...old, [name]: currentHeight}));
         }
     }, [ref, name, setHeight, height]);
+    const dayEffort = formatEffort(sumEffortSeconds(timeSpans, moment()));
     return (
         <div key={name} ref={(r) => (ref.current = r)}>
             <Typography key={name} align="center" variant={'h5'}>
                 {name}
+                <Typography component="span" variant="body2" color="textSecondary" style={{marginLeft: 12}}>
+                    total {dayEffort}
+                </Typography>
             </Typography>
             {timeSpans.map((timeSpanProps) => (
                 <TimeSpan key={timeSpanProps.id} {...timeSpanProps} addTagsToTracker={addTagsToTracker} />
