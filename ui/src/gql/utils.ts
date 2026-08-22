@@ -7,16 +7,17 @@ import {TimeSpansInRange, TimeSpansInRangeVariables} from './__generated__/TimeS
 import {Trackers} from './__generated__/Trackers';
 import {StopTimer} from './__generated__/StopTimer';
 
-export const addTimeSpanToCache = (cache: DataProxy, ts: AddTimeSpan_createTimeSpan) => {
+export const addTimeSpanToCache = (cache: DataProxy, ts: AddTimeSpan_createTimeSpan, filter?: string) => {
     let oldTimeSpans: TimeSpans | null = null;
     try {
-        oldTimeSpans = cache.readQuery<TimeSpans>({query: gqlTimeSpan.TimeSpans});
+        oldTimeSpans = cache.readQuery<TimeSpans>({query: gqlTimeSpan.TimeSpans, variables: {filter}});
     } catch {}
     if (!oldTimeSpans) {
         return;
     }
     cache.writeQuery<TimeSpans>({
         query: gqlTimeSpan.TimeSpans,
+        variables: {filter},
         data: {
             timeSpans: {
                 __typename: 'PagedTimeSpans',

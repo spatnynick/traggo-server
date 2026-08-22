@@ -4,6 +4,7 @@ import * as moment from 'moment';
 import {uglyConvertToLocalTime} from '../timespan/timeutils';
 import {useSettings} from '../gql/settings';
 import {DateTimeInputStyle} from '../gql/__generated__/globalTypes';
+import {getDigitOverwriteSelection} from './dateTimeInput';
 
 interface DateTimeSelectorProps {
     selectedDate: moment.Moment;
@@ -11,10 +12,11 @@ interface DateTimeSelectorProps {
     showDate: boolean;
     label: string;
     popoverOpen?: (open: boolean) => void;
+    error?: boolean;
 }
 
 export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
-    ({selectedDate, onSelectDate, showDate, label, popoverOpen = () => {}}) => {
+    ({selectedDate, onSelectDate, showDate, label, popoverOpen = () => {}, error = false}) => {
         const {done, dateTimeInputStyle} = useSettings();
 
         if (!done) {
@@ -26,6 +28,7 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
                 <input
                     type="datetime-local"
                     value={selectedDate.format(selectedDate.format('YYYY-MM-DDTHH:mm'))}
+                    aria-invalid={error}
                     onChange={(e) => {
                         onSelectDate(moment.default(e.target.value));
                     }}
@@ -58,6 +61,23 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
                 }}
                 margin="none"
                 value={uglyConvertToLocalTime(selectedDate).format()}
+                error={error}
+                inputProps={{
+                    onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
+                        if (event.ctrlKey || event.metaKey || event.altKey || !/^\d$/.test(event.key)) {
+                            return;
+                        }
+
+                        const selection = getDigitOverwriteSelection(
+                            event.currentTarget.value,
+                            event.currentTarget.selectionStart,
+                            event.currentTarget.selectionEnd
+                        );
+                        if (selection) {
+                            event.currentTarget.setSelectionRange(selection.start, selection.end);
+                        }
+                    },
+                }}
                 onChange={(date: moment.Moment) => {
                     if (!date || !date.isValid()) {
                         return;
