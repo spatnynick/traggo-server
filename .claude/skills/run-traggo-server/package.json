@@ -1,0 +1,7 @@
+{
+  "name": "run-traggo-server-driver",
+  "private": true,
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}
