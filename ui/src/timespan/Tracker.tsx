@@ -42,7 +42,7 @@ export const Tracker: React.FC<TrackerProps> = ({
 }) => {
     const [openMenu, setOpenMenu] = React.useState<null | HTMLElement>(null);
     const [type, setType] = React.useState<Type>(Type.Tracker);
-    const [filterMode, setFilterMode] = React.useState(false);
+    const [filterMode, setFilterMode] = React.useState(true);
     const [filterText, setFilterText] = React.useState('');
 
     React.useEffect(() => {
