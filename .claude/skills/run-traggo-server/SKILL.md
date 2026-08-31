@@ -12,6 +12,13 @@ this box — this driver replaces it, same command shape).
 All paths below are relative to `traggo-server/` (this skill's parent
 dir), except the driver's own path.
 
+## Canonical ports
+
+- **`:3031` is mandatory user-facing Traggo UI port.** Start and validate the
+  UI there on every local restart; send users to `http://localhost:3031`.
+- **`:3030` is internal GraphQL backend port.** The UI's proxy depends on it,
+  but it is not the user-facing endpoint.
+
 ## Prerequisites
 
 None beyond the base image's `go` and `node`/`yarn` — this Ubuntu 26.04
@@ -56,7 +63,7 @@ disown
 timeout 30 bash -c 'until curl -sf -X POST -H "Content-Type: application/json" \
   -d "{\"query\":\"{__typename}\"}" http://localhost:3030/graphql >/dev/null; do sleep 1; done'
 
-# UI — CRA dev server on :3031, proxies to :3030 per ui/package.json
+# UI — mandatory user-facing CRA dev server on :3031; proxies to internal :3030
 # "proxy". Needs the OpenSSL legacy flag (see Gotchas).
 cd ui
 PORT=3031 BROWSER=none NODE_OPTIONS=--openssl-legacy-provider yarn start \
@@ -110,9 +117,10 @@ Screenshots land in `.claude/skills/run-traggo-server/screenshots/`.
 
 ## Run (human path)
 
-`go run .` (backend, :3030) + `cd ui && yarn start` (UI, default
-:3000, or `PORT=<n>`) — opens nothing headless-usable here; only
-useful with a real browser outside the container.
+`go run .` (internal backend, :3030) + `cd ui && PORT=3031 BROWSER=none
+NODE_OPTIONS=--openssl-legacy-provider yarn start` (mandatory user-facing UI,
+:3031). Use `http://localhost:3031`, never the backend port, for manual UI
+access.
 
 ## Test
 
