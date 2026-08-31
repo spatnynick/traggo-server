@@ -2,10 +2,14 @@
 
 ## Ports
 
-- **3031 is mandatory user-facing Traggo UI port.** Use `http://localhost:3031`
-  for every local restart and UI health check.
+- **3031 is mandatory UI service port inside development environment.** Agents
+  use `http://localhost:3031` for health checks and browser automation.
 - **3030 is internal GraphQL backend port.** The UI development server proxies
   GraphQL requests there; do not direct users to it.
+- **External developer access uses SSH tunnel.** On developer computer run
+  `ssh -p 2223 -L 8099:localhost:3031 bogo@nas`, then open
+  `http://localhost:8099/#/timesheet/calendar`. Port 3031 is not directly
+  mapped from Docker to developer computer.
 
 ## Restart
 
@@ -23,7 +27,7 @@ cd ui
 PORT=3031 BROWSER=none NODE_OPTIONS=--openssl-legacy-provider yarn start
 ```
 
-Verify user-facing endpoint:
+Verify UI service from inside container:
 
 ```bash
 curl -fsS http://localhost:3031 >/dev/null

@@ -14,10 +14,15 @@ dir), except the driver's own path.
 
 ## Canonical ports
 
-- **`:3031` is mandatory user-facing Traggo UI port.** Start and validate the
-  UI there on every local restart; send users to `http://localhost:3031`.
+- **`:3031` is mandatory UI service port inside container.** Start and validate
+  it there on every local restart; agents use `http://localhost:3031` for
+  browser automation.
 - **`:3030` is internal GraphQL backend port.** The UI's proxy depends on it,
   but it is not the user-facing endpoint.
+- **Developer access is SSH tunnel only.** Docker does not directly map port
+  3031 to developer computer. Developer runs
+  `ssh -p 2223 -L 8099:localhost:3031 bogo@nas` then opens
+  `http://localhost:8099/#/timesheet/calendar`.
 
 ## Prerequisites
 
@@ -63,7 +68,7 @@ disown
 timeout 30 bash -c 'until curl -sf -X POST -H "Content-Type: application/json" \
   -d "{\"query\":\"{__typename}\"}" http://localhost:3030/graphql >/dev/null; do sleep 1; done'
 
-# UI — mandatory user-facing CRA dev server on :3031; proxies to internal :3030
+# UI — mandatory CRA dev server inside container on :3031; proxies to internal :3030
 # "proxy". Needs the OpenSSL legacy flag (see Gotchas).
 cd ui
 PORT=3031 BROWSER=none NODE_OPTIONS=--openssl-legacy-provider yarn start \
@@ -118,9 +123,9 @@ Screenshots land in `.claude/skills/run-traggo-server/screenshots/`.
 ## Run (human path)
 
 `go run .` (internal backend, :3030) + `cd ui && PORT=3031 BROWSER=none
-NODE_OPTIONS=--openssl-legacy-provider yarn start` (mandatory user-facing UI,
-:3031). Use `http://localhost:3031`, never the backend port, for manual UI
-access.
+NODE_OPTIONS=--openssl-legacy-provider yarn start` (UI service, :3031). Agents
+use `http://localhost:3031`; developers use SSH tunnel endpoint
+`http://localhost:8099/#/timesheet/calendar`.
 
 ## Test
 

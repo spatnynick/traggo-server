@@ -35,6 +35,27 @@ You can do it just as you like.
 If you want to use Traggo, you need to host it yourself. This way, you have the full control over your data and no third-party
 may be able to read it. Have a look at our [Install Guide](https://traggo.net/install/).
 
+## Fork development access
+
+This fork runs inside a Docker container. Its development UI service listens on
+container port `3031`, which is not directly exposed to the developer's
+computer. Access it through SSH tunnelling, not by connecting to port `3031`
+directly:
+
+```bash
+ssh -p 2223 -L 8099:localhost:3031 bogo@nas
+```
+
+With tunnel running, open:
+
+```text
+http://localhost:8099/#/timesheet/calendar
+```
+
+For agents running inside container, `http://localhost:3031` remains correct
+for health checks and browser automation. Port `3030` is internal GraphQL
+backend used by UI proxy.
+
 ## Features
 
 * easy to setup
