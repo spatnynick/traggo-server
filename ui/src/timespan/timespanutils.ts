@@ -43,7 +43,7 @@ const group = (startOfTomorrow: moment.Moment, startOfToday: moment.Moment, star
 export type GroupedTimeSpanProps = Array<{key: string; timeSpans: TimeSpanProps[]}>;
 
 // Sum of effort (seconds) of the given time spans; running spans count up to now.
-export const sumEffortSeconds = (timeSpans: TimeSpanProps[], now: moment.Moment): number =>
+export const sumEffortSeconds = (timeSpans: Array<Pick<TimeSpanProps, 'range'>>, now: moment.Moment): number =>
     timeSpans.reduce((acc, ts) => {
         const to = ts.range.to || now;
         return acc + Math.max(0, to.unix() - ts.range.from.unix());

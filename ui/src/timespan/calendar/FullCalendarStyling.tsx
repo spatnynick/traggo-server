@@ -13,6 +13,37 @@ const useStyle = makeStyles((theme) => {
             '& .fc-head': {
                 fontFamily: 'monospace',
             },
+            '& .fc-timeGrid-view .fc-head': {
+                // FullCalendar keeps this element outside its vertically scrolling grid.
+                // Keep it above events while users scroll through a long day.
+                position: 'relative',
+                zIndex: 6,
+            },
+            '& .calendar-day-summary': {
+                display: 'flex',
+                minHeight: 40,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                lineHeight: 1.15,
+                whiteSpace: 'nowrap',
+            },
+            '& .calendar-day-summary-date': {
+                fontWeight: 'normal',
+            },
+            '& .calendar-day-summary-effort': {
+                fontWeight: 'bold',
+            },
+            '& .calendar-day-summary-icon': {
+                fontFamily: 'sans-serif',
+                fontSize: '1rem',
+            },
+            '& .calendar-day-summary-warning': {
+                color: '#f9a825',
+            },
+            '& .calendar-day-summary-error': {
+                color: theme.palette.error.main,
+            },
             '& .fc-toolbar': {
                 display: 'flex',
                 justifyContent: 'space-between',

@@ -38,10 +38,22 @@ import {timeRunningCalendar} from '../timeutils';
 import {stripTypename} from '../../utils/strip';
 import {TimeSpansInRange, TimeSpansInRangeVariables} from '../../gql/__generated__/TimeSpansInRange';
 import {ExtendedEventSourceInput} from '@fullcalendar/core/structs/event-source';
+import {calendarDayKey, calendarDaySummaries} from './calendarSummary';
+import {useDurationFormatter} from '../durationFormat';
 
 const toMoment = (date: Date): moment.Moment => {
     return moment(date).tz('utc');
 };
+
+const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+};
+
+const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, (character) => htmlEntities[character]);
 
 declare global {
     interface Window {
@@ -55,6 +67,7 @@ const StartTimerId = '-1';
 export const CalendarPage: React.FC = () => {
     const apollo = useApolloClient();
     const theme = useTheme();
+    const formatDuration = useDurationFormatter();
     const timeSpansResult = useQuery<TimeSpansInRange, TimeSpansInRangeVariables>(gqlTimeSpan.TimeSpansInRange, {
         variables: {
             start: moment()
@@ -151,6 +164,18 @@ export const CalendarPage: React.FC = () => {
                 };
             });
     })();
+    const daySummaries = React.useMemo(
+        () =>
+            calendarDaySummaries(
+                [
+                    ...((timeSpansResult.data && timeSpansResult.data.timeSpans && timeSpansResult.data.timeSpans.timeSpans) ||
+                        []),
+                    ...((trackersResult.data && trackersResult.data.timers) || []),
+                ],
+                currentDate
+            ),
+        [currentDate, timeSpansResult.data, trackersResult.data]
+    );
 
     const onDrop: OptionsInput['eventDrop'] = (data) => {
         updateTimeSpanMutation({
@@ -265,7 +290,22 @@ export const CalendarPage: React.FC = () => {
                     eventClick={onClick}
                     eventDrop={onDrop}
                     slotLabelFormat={(s) => toMoment(s.start.marker).format('LT')}
-                    columnHeaderFormat={(s) => toMoment(s.start.marker).format('DD ddd')}
+                    columnHeaderHtml={(date) => {
+                        const summary = daySummaries[calendarDayKey(date as Date)];
+                        const severity = summary ? summary.severity : 'normal';
+                        const warning =
+                            severity === 'normal'
+                                ? ''
+                                : '<span class="calendar-day-summary-icon" title="Booked hours exceed daily limit">⚠</span>';
+                        const effort = summary
+                            ? `<span class="calendar-day-summary-effort">${escapeHtml(
+                                  formatDuration(summary.effortSeconds, {unitCount: 2})
+                              )}</span>`
+                            : '';
+                        return `<div class="calendar-day-summary calendar-day-summary-${severity}"><span class="calendar-day-summary-date">${toMoment(
+                            date as Date
+                        ).format('DD ddd')}</span>${effort}${warning}</div>`;
+                    }}
                     nowIndicator={true}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, momentPlugin]}
                     header={{
