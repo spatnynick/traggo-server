@@ -21,7 +21,7 @@ import {UpdateTimeSpan, UpdateTimeSpanVariables} from '../../gql/__generated__/U
 import Popper from '@material-ui/core/Popper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import {TimeSpan} from '../TimeSpan';
-import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
+import {toInputTags, toTagSelectorEntry} from '../../tag/tagSelectorEntry';
 import {AddTimeSpan, AddTimeSpanVariables} from '../../gql/__generated__/AddTimeSpan';
 import {FullCalendarStyling} from './FullCalendarStyling';
 import useInterval from '@rooks/use-interval';
@@ -40,6 +40,8 @@ import {TimeSpansInRange, TimeSpansInRangeVariables} from '../../gql/__generated
 import {ExtendedEventSourceInput} from '@fullcalendar/core/structs/event-source';
 import {calendarDayKey, calendarDaySummaries} from './calendarSummary';
 import {useDurationFormatter} from '../durationFormat';
+import {useSnackbar} from 'notistack';
+import {handleError} from '../../utils/errors';
 
 const toMoment = (date: Date): moment.Moment => {
     return moment(date).tz('utc');
@@ -68,6 +70,7 @@ export const CalendarPage: React.FC = () => {
     const apollo = useApolloClient();
     const theme = useTheme();
     const formatDuration = useDurationFormatter();
+    const {enqueueSnackbar} = useSnackbar();
     const timeSpansResult = useQuery<TimeSpansInRange, TimeSpansInRangeVariables>(gqlTimeSpan.TimeSpansInRange, {
         variables: {
             start: moment()
@@ -340,6 +343,21 @@ export const CalendarPage: React.FC = () => {
                                     setSelected({selected: null, data: null});
                                 }}
                                 continued={() => setCurrentDate(moment())}
+                                duplicated={({range, tags, note}) => {
+                                    addTimeSpan({
+                                        variables: {
+                                            start: range.from.format(),
+                                            end: range.to!.format(),
+                                            tags: toInputTags(tags),
+                                            note,
+                                        },
+                                    })
+                                        .then(() => {
+                                            setSelected({selected: null, data: null});
+                                            enqueueSnackbar('Duplicate created — drag it to move', {variant: 'success'});
+                                        })
+                                        .catch(handleError('Duplicate time span', enqueueSnackbar));
+                                }}
                                 range={{
                                     from: moment(selected.data!.start),
                                     to: selected.data!.end ? moment(selected.data!.end) : undefined,

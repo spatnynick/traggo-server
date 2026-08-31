@@ -29,6 +29,12 @@ interface Range {
     to?: moment.Moment;
 }
 
+export interface TimeSpanDuplicate {
+    range: Range;
+    tags: TagSelectorEntry[];
+    note: string;
+}
+
 const TIME_UPDATE_DELAY = 250;
 
 const cloneRange = (range: Range): Range => ({
@@ -48,6 +54,7 @@ export interface TimeSpanProps {
     deleted?: () => void;
     stopped?: () => void;
     continued?: () => void;
+    duplicated?: (timeSpan: TimeSpanDuplicate) => void;
     addTagsToTracker?: (tags: TagSelectorEntry[]) => void;
     elevation?: number;
     filter?: string;
@@ -104,6 +111,7 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         deleted = () => {},
         stopped = () => {},
         continued = () => {},
+        duplicated,
         elevation = 1,
         addTagsToTracker,
         filter,
@@ -375,6 +383,19 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                                     }).then(() => continued());
                                 }}>
                                 Continue
+                            </MenuItem>
+                        ) : null}
+                        {to && duplicated ? (
+                            <MenuItem
+                                onClick={() => {
+                                    setOpenMenu(null);
+                                    duplicated({
+                                        range: cloneRange(currentRange),
+                                        tags: selectedEntries.slice(),
+                                        note: note.current.value,
+                                    });
+                                }}>
+                                Duplicate
                             </MenuItem>
                         ) : null}
                         {addTagsToTracker ? (
