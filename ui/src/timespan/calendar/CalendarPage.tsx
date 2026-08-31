@@ -298,7 +298,7 @@ export const CalendarPage: React.FC = () => {
                                 ? ''
                                 : '<span class="calendar-day-summary-icon" title="Booked hours exceed daily limit">⚠</span>';
                         const effort = summary
-                            ? `<span class="calendar-day-summary-effort">${escapeHtml(
+                            ? `<span class="calendar-day-summary-effort">Total ${escapeHtml(
                                   formatDuration(summary.effortSeconds, {unitCount: 2})
                               )}</span>`
                             : '';

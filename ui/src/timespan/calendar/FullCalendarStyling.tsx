@@ -20,23 +20,29 @@ const useStyle = makeStyles((theme) => {
                 zIndex: 6,
             },
             '& .calendar-day-summary': {
-                display: 'flex',
-                minHeight: 40,
-                alignItems: 'center',
+                minHeight: 48,
+                padding: '5px 0',
                 justifyContent: 'center',
-                gap: 4,
                 lineHeight: 1.15,
                 whiteSpace: 'nowrap',
             },
             '& .calendar-day-summary-date': {
+                display: 'block',
                 fontWeight: 'normal',
+                marginBottom: 4,
             },
             '& .calendar-day-summary-effort': {
+                display: 'inline-block',
                 fontWeight: 'bold',
+                padding: '2px 6px',
+                borderRadius: 10,
+                background: theme.palette.type === 'dark' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.08)',
             },
             '& .calendar-day-summary-icon': {
+                display: 'inline-block',
                 fontFamily: 'sans-serif',
                 fontSize: '1rem',
+                marginLeft: 4,
             },
             '& .calendar-day-summary-warning': {
                 color: '#f9a825',
