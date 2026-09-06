@@ -35,3 +35,20 @@ curl -fsS http://localhost:3031 >/dev/null
 
 Do not run database reset, migration, copy, or restore commands against
 `/mnt/dev/traggo-dev/traggo.work.db` during ordinary restarts.
+
+## Container recreate: restore the UI toolchain
+
+The UI uses Yarn 1.x (`yarn.lock`). Node 20 includes Corepack, but a recreated
+container may not have a `yarn` shim yet. Restore the user-local shim before
+running manual UI commands:
+
+```bash
+mkdir -p "$HOME/.local/bin"
+corepack enable --install-directory "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+yarn --version  # expected: 1.22.22
+```
+
+`/mnt/dev/traggo-dev/start-traggo.sh` also falls back to `corepack yarn` when
+the shim is absent, so the normal development start command remains usable
+before this optional convenience setup is repeated.
