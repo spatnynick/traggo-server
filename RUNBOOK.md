@@ -17,7 +17,7 @@ Start backend with explicitly selected production database only when a
 production restart is intended:
 
 ```bash
-TRAGGO_DATABASE_CONNECTION=/home/bogo/dev/traggo-dev/traggo.work.db go run .
+TRAGGO_DATABASE_CONNECTION=/mnt/dev/traggo-dev/traggo.work.db go run .
 ```
 
 Start UI on mandatory port 3031:
@@ -34,4 +34,4 @@ curl -fsS http://localhost:3031 >/dev/null
 ```
 
 Do not run database reset, migration, copy, or restore commands against
-`/home/bogo/dev/traggo-dev/traggo.work.db` during ordinary restarts.
+`/mnt/dev/traggo-dev/traggo.work.db` during ordinary restarts.

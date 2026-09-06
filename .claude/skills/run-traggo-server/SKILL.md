@@ -62,7 +62,7 @@ Launch backend + UI dev server, then drive with `driver.mjs`.
 ```bash
 # Backend — GraphQL on :3030. Point at a work/scratch DB, never the
 # real traggo.db, when just testing:
-TRAGGO_DATABASE_CONNECTION=/home/bogo/dev/traggo-dev/traggo.work.db \
+TRAGGO_DATABASE_CONNECTION=/mnt/dev/traggo-dev/traggo.work.db \
   go run . > /tmp/traggo-backend.log 2>&1 &
 disown
 timeout 30 bash -c 'until curl -sf -X POST -H "Content-Type: application/json" \
