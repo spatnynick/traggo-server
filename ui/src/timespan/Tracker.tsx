@@ -3,7 +3,7 @@ import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
 import {Button, Input, Typography} from '@material-ui/core';
-import {MoreVert, Search, Close} from '@material-ui/icons';
+import {MoreVert, Search, Close, Functions} from '@material-ui/icons';
 import LabelIcon from '@material-ui/icons/Label';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
@@ -11,14 +11,16 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import {DateTimeSelector} from '../common/DateTimeSelector';
-import {useMutation} from '@apollo/react-hooks';
+import {useApolloClient, useMutation} from '@apollo/react-hooks';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {StartTimer, StartTimerVariables} from '../gql/__generated__/StartTimer';
 import {InputTimeSpanTag} from '../gql/__generated__/globalTypes';
 import {AddTimeSpan, AddTimeSpanVariables} from '../gql/__generated__/AddTimeSpan';
+import {FilteredDuration, FilteredDurationVariables} from '../gql/__generated__/FilteredDuration';
 import {useSnackbar} from 'notistack';
 import {inUserTz} from './timeutils';
 import {addTimeSpanToCache} from '../gql/utils';
+import {useDurationFormatter} from './durationFormat';
 
 enum Type {
     Tracker,
@@ -80,6 +82,20 @@ export const Tracker: React.FC<TrackerProps> = ({
         },
     });
     const {enqueueSnackbar} = useSnackbar();
+    const apolloClient = useApolloClient();
+    const formatDuration = useDurationFormatter();
+
+    const showFilteredSum = () => {
+        apolloClient
+            .query<FilteredDuration, FilteredDurationVariables>({
+                query: gqlTimeSpan.FilteredDuration,
+                variables: {filter: filterText},
+                fetchPolicy: 'network-only',
+            })
+            .then(({data}) => {
+                enqueueSnackbar(`total for filter: ${formatDuration(data.filteredDuration)}`, {variant: 'info'});
+            });
+    };
 
     React.useEffect(() => {
         const handle = window.setInterval(() => {
@@ -182,6 +198,9 @@ export const Tracker: React.FC<TrackerProps> = ({
                 ) : null}
                 {filterMode ? (
                     <>
+                        <IconButton onClick={showFilteredSum} title="Sum of all entries matching this filter">
+                            <Functions />
+                        </IconButton>
                         <IconButton onClick={clearFilterText} title="Clear filter">
                             <Close />
                         </IconButton>

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jinzhu/gorm"
 	"github.com/traggo/server/auth"
 	"github.com/traggo/server/generated/gqlmodel"
 	"github.com/traggo/server/model"
@@ -23,10 +24,53 @@ func (r *ResolverForTimeSpan) TimeSpans(ctx context.Context, fromInclusive *mode
 		cursor.StartID = &s.ID
 	}
 
-	call := r.DB.Preload("Tags").Where("user_id = ?", user.ID).Not("end_user_time is NULL").Order("start_user_time DESC").Limit(*cursor.PageSize)
+	call, err := filteredTimeSpans(r.DB, user.ID, fromInclusive, toInclusive, filter)
+	if err != nil {
+		return nil, err
+	}
+	call = call.Preload("Tags").Order("start_user_time DESC").Limit(*cursor.PageSize)
 	if cursor.Offset != nil && cursor.StartID != nil {
 		call = call.Where("id <= ?", *cursor.StartID).Offset(*cursor.Offset)
 	}
+
+	var timeSpans []model.TimeSpan
+	call.Find(&timeSpans)
+
+	var result []*gqlmodel.TimeSpan
+	for _, span := range timeSpans {
+		result = append(result, timeSpanToExternal(span))
+	}
+	return &gqlmodel.PagedTimeSpans{
+		TimeSpans: result,
+		Cursor: &gqlmodel.Cursor{
+			HasMore:  len(timeSpans) != 0 && *cursor.Offset%*cursor.PageSize == 0,
+			Offset:   *cursor.Offset + len(timeSpans),
+			StartID:  *cursor.StartID,
+			PageSize: *cursor.PageSize},
+	}, nil
+}
+
+// FilteredDuration returns the total tracked duration, in seconds, of every finished time span
+// matching filter (same note/tag matching rules as TimeSpans), across all of the user's history.
+func (r *ResolverForTimeSpan) FilteredDuration(ctx context.Context, filter *string) (float64, error) {
+	user := auth.GetUser(ctx)
+	call, err := filteredTimeSpans(r.DB, user.ID, nil, nil, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	var sum struct{ Seconds float64 }
+	err = call.Select(
+		"COALESCE(SUM(round((julianday(end_user_time) - julianday(start_user_time)) * 86400, 0)), 0) as seconds",
+	).Scan(&sum).Error
+	return sum.Seconds, err
+}
+
+// filteredTimeSpans applies the user scoping, date range and note/tag filter shared by TimeSpans
+// and FilteredDuration.
+func filteredTimeSpans(db *gorm.DB, userID int, fromInclusive *model.Time, toInclusive *model.Time, filter *string) (*gorm.DB, error) {
+	call := db.Model(&model.TimeSpan{}).Where("user_id = ?", userID).Not("end_user_time is NULL")
+
 	if fromInclusive != nil {
 		if toInclusive != nil {
 			if fromInclusive.Time().After(toInclusive.Time()) {
@@ -54,21 +98,7 @@ func (r *ResolverForTimeSpan) TimeSpans(ctx context.Context, fromInclusive *mode
 		}
 	}
 
-	var timeSpans []model.TimeSpan
-	call.Find(&timeSpans)
-
-	var result []*gqlmodel.TimeSpan
-	for _, span := range timeSpans {
-		result = append(result, timeSpanToExternal(span))
-	}
-	return &gqlmodel.PagedTimeSpans{
-		TimeSpans: result,
-		Cursor: &gqlmodel.Cursor{
-			HasMore:  len(timeSpans) != 0 && *cursor.Offset%*cursor.PageSize == 0,
-			Offset:   *cursor.Offset + len(timeSpans),
-			StartID:  *cursor.StartID,
-			PageSize: *cursor.PageSize},
-	}, nil
+	return call, nil
 }
 
 func normalize(cursor *gqlmodel.InputCursor) *gqlmodel.InputCursor {

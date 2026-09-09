@@ -56,6 +56,7 @@ type RootQuery {
     currentDevice: Device
     devices: [Device!] @hasRole(role: USER)
     timeSpans(fromInclusive: Time, toInclusive: Time, cursor: InputCursor, filter: String): PagedTimeSpans! @hasRole(role: USER)
+    filteredDuration(filter: String): Float! @hasRole(role: USER)
     timers: [TimeSpan!] @hasRole(role: USER)
     stats(ranges: [Range!], tags: [String!], excludeTags: [InputTimeSpanTag!], requireTags: [InputTimeSpanTag!]): [RangedStatisticsEntries!] @hasRole(role: USER)
     stats2(now: Time!, stats: InputStatsSelection!): [RangedStatisticsEntries!] @hasRole(role: USER)

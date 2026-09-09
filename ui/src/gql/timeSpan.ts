@@ -62,6 +62,12 @@ export const TimeSpans = gql`
     }
 `;
 
+export const FilteredDuration = gql`
+    query FilteredDuration($filter: String) {
+        filteredDuration(filter: $filter)
+    }
+`;
+
 export const StartTimer = gql`
     mutation StartTimer($start: Time!, $tags: [InputTimeSpanTag!], $note: String!) {
         createTimeSpan(start: $start, tags: $tags, note: $note) {
