@@ -93,7 +93,9 @@ export const Tracker: React.FC<TrackerProps> = ({
                 fetchPolicy: 'network-only',
             })
             .then(({data}) => {
-                enqueueSnackbar(`total for filter: ${formatDuration(data.filteredDuration)}`, {variant: 'info'});
+                const seconds = data.filteredDuration;
+                const days = (seconds / 3600 / 8).toFixed(2).replace('.', ',');
+                enqueueSnackbar(`total for filter: ${formatDuration(seconds)} (${days}D)`, {variant: 'info'});
             });
     };
 
@@ -198,11 +200,11 @@ export const Tracker: React.FC<TrackerProps> = ({
                 ) : null}
                 {filterMode ? (
                     <>
-                        <IconButton onClick={showFilteredSum} title="Sum of all entries matching this filter">
-                            <Functions />
-                        </IconButton>
                         <IconButton onClick={clearFilterText} title="Clear filter">
                             <Close />
+                        </IconButton>
+                        <IconButton onClick={showFilteredSum} title="Sum of all entries matching this filter">
+                            <Functions />
                         </IconButton>
                         <IconButton onClick={exitFilterMode} color="primary" title="Enter tags">
                             <LabelIcon />
