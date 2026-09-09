@@ -4,6 +4,7 @@ import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
 import {Button, Input, Typography} from '@material-ui/core';
 import {MoreVert, Search, Close} from '@material-ui/icons';
+import LabelIcon from '@material-ui/icons/Label';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
 import Menu from '@material-ui/core/Menu';
@@ -44,17 +45,25 @@ export const Tracker: React.FC<TrackerProps> = ({
     const [type, setType] = React.useState<Type>(Type.Tracker);
     const [filterMode, setFilterMode] = React.useState(true);
     const [filterText, setFilterText] = React.useState('');
+    const filterInput = React.useRef<null | HTMLInputElement>(null);
 
     React.useEffect(() => {
         const handle = window.setTimeout(() => onFilterChange(filterText), 250);
         return () => window.clearTimeout(handle);
     }, [filterText, onFilterChange]);
 
-    const toggleFilter = () => {
-        if (filterMode) {
-            setFilterText('');
+    const enterFilterMode = () => {
+        setFilterMode(true);
+    };
+    const exitFilterMode = () => {
+        setFilterText('');
+        setFilterMode(false);
+    };
+    const clearFilterText = () => {
+        setFilterText('');
+        if (filterInput.current) {
+            filterInput.current.focus();
         }
-        setFilterMode(!filterMode);
     };
     const [from, setFrom] = React.useState<moment.Moment>(moment().subtract(15, 'minute'));
     const [to, setTo] = React.useState<moment.Moment>(moment());
@@ -109,12 +118,13 @@ export const Tracker: React.FC<TrackerProps> = ({
                             autoFocus
                             fullWidth
                             disableUnderline
+                            inputRef={filterInput}
                             value={filterText}
                             placeholder="Filter by note or tags"
                             onChange={(e) => setFilterText(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Escape') {
-                                    toggleFilter();
+                                    exitFilterMode();
                                 }
                             }}
                             startAdornment={<Search style={{marginRight: 8, opacity: 0.54}} />}
@@ -170,12 +180,20 @@ export const Tracker: React.FC<TrackerProps> = ({
                         {type === Type.Manual ? 'add' : 'start'}
                     </Button>
                 ) : null}
-                <IconButton
-                    onClick={toggleFilter}
-                    color={filterMode ? 'primary' : 'default'}
-                    title={filterMode ? 'Close filter' : 'Filter entries'}>
-                    {filterMode ? <Close /> : <Search />}
-                </IconButton>
+                {filterMode ? (
+                    <>
+                        <IconButton onClick={clearFilterText} title="Clear filter">
+                            <Close />
+                        </IconButton>
+                        <IconButton onClick={exitFilterMode} color="primary" title="Enter tags">
+                            <LabelIcon />
+                        </IconButton>
+                    </>
+                ) : (
+                    <IconButton onClick={enterFilterMode} title="Filter entries">
+                        <Search />
+                    </IconButton>
+                )}
                 {!filterMode ? (
                     <IconButton onClick={(e: React.MouseEvent<HTMLElement>) => setOpenMenu(e.currentTarget)}>
                         <MoreVert />
