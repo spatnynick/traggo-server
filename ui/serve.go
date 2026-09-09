@@ -30,10 +30,13 @@ func Register(r *mux.Router) {
 	}))
 
 	r.Handle("/favicon.ico", serveFile("favicon.ico", "image/x-icon"))
-	for _, size := range []string{"16x16", "32x32", "192x192", "256x256"} {
+	for _, size := range []string{"16x16", "32x32", "192x192", "256x256", "512x512"} {
 		fileName := fmt.Sprintf("favicon-%s.png", size)
 		r.Handle("/"+fileName, serveFile(fileName, "image/png"))
 	}
+	r.Handle("/favicon-512x512-maskable.png", serveFile("favicon-512x512-maskable.png", "image/png"))
+	r.Handle("/icon.svg", serveFile("icon.svg", "image/svg+xml"))
+	r.Handle("/apple-touch-icon.png", serveFile("apple-touch-icon.png", "image/png"))
 }
 
 func serveFile(name, contentType string) http.HandlerFunc {
