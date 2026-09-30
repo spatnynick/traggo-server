@@ -305,9 +305,9 @@ export const CalendarPage: React.FC = () => {
                                   formatDuration(summary.effortSeconds, {unitCount: 2})
                               )}</span>`
                             : '';
-                        return `<div class="calendar-day-summary calendar-day-summary-${severity}"><span class="calendar-day-summary-date">${toMoment(
-                            date as Date
-                        ).format('DD ddd')}</span>${effort}${warning}</div>`;
+                        return `<div class="calendar-day-summary calendar-day-summary-${severity}"><span class="calendar-day-summary-date">${moment(date as Date).format(
+                            'DD ddd'
+                        )}</span>${effort}${warning}</div>`;
                     }}
                     nowIndicator={true}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, momentPlugin]}
