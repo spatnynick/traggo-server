@@ -18,7 +18,7 @@ export const DailyPage = () => {
                     selectedEntries.length === 0 ? (entries) => setSelectedEntries(selectedEntries.concat(entries)) : undefined
                 }
             />
-            <RefreshTimeSpans />
+            <RefreshTimeSpans filter={filter} />
         </div>
     );
 };

@@ -22,6 +22,9 @@ interface DoneTrackersProps {
 export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker, filter}) => {
     const trackersResult = useQuery<TimeSpans, TimeSpansVariables>(gqlTimeSpan.TimeSpans, {
         variables: {cursor: {pageSize: 30}, filter},
+        // Each filter has its own cache entry and mutations only patch the visible one, so
+        // always re-check the server when the list mounts or the filter changes.
+        fetchPolicy: 'cache-and-network',
     });
     const loading = React.useRef(false);
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
@@ -81,9 +84,8 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker, fil
     const values: GroupedTimeSpanProps = React.useMemo(() => {
         if (
             trackersResult.error ||
-            trackersResult.loading ||
             !trackersResult.data ||
-            trackersResult.data.timeSpans === null ||
+            !trackersResult.data.timeSpans ||
             tagsResult.error ||
             tagsResult.loading ||
             !tagsResult.data ||

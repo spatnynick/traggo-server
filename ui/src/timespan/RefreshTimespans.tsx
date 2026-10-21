@@ -8,9 +8,9 @@ import moment from 'moment';
 import {Fab, Zoom} from '@material-ui/core';
 import RefreshIcon from '@material-ui/icons/Refresh';
 
-export const RefreshTimeSpans: React.FC = () => {
+export const RefreshTimeSpans: React.FC<{filter?: string}> = ({filter}) => {
     const {refetch, data} = useQuery<TimeSpans, TimeSpansVariables>(gqlTimeSpan.TimeSpans, {
-        variables: {cursor: {pageSize: 30}},
+        variables: {cursor: {pageSize: 30}, filter},
     });
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     const hasMovedEntries =
@@ -48,7 +48,7 @@ export const RefreshTimeSpans: React.FC = () => {
             <Fab
                 aria-label={'refresh'}
                 onClick={() => {
-                    refetch({cursor: {pageSize: 30}}).then(() => {
+                    refetch({cursor: {pageSize: 30}, filter}).then(() => {
                         enqueueSnackbar('Refreshed messages', {variant: 'success'});
                     });
                 }}
