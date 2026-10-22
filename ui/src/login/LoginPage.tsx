@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {InstanceBadge} from '../common/InstanceBadge';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import {LoginForm} from './LoginForm';
@@ -46,6 +47,7 @@ export const LoginPage = () => {
                 <Typography variant="subtitle1" component="span" className={classes.footerLink}>
                     {version.name}@{version.commit.slice(0, 8)}
                 </Typography>
+                <InstanceBadge versionName={version.name} />
             </div>
         </Grid>
     );

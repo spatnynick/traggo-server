@@ -24,6 +24,7 @@ import {ListSubheader, Menu} from '@material-ui/core';
 import HrefLink from '@material-ui/core/Link';
 import * as gqlUser from '../gql/user';
 import * as gqlVersion from '../gql/version';
+import {InstanceBadge} from './InstanceBadge';
 import Button from '@material-ui/core/Button';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import {Link} from 'react-router-dom';
@@ -130,6 +131,7 @@ export const Page: React.FC = ({children}) => {
                         {version.name}@{version.commit.slice(0, 8)}
                     </Typography>
                 </HrefLink>
+                <InstanceBadge versionName={version.name} />
             </div>
             <Divider />
             <List subheader={<ListSubheader>Dashboards</ListSubheader>} dense={true}>
