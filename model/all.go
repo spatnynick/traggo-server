@@ -13,5 +13,8 @@ func All() []interface{} {
 		new(DashboardEntry),
 		new(DashboardTagFilter),
 		new(DashboardRange),
+		new(ExportMapping),
+		new(ExportMappingTag),
+		new(ExportRun),
 	}
 }

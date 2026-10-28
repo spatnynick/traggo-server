@@ -33,6 +33,19 @@ func (r *ResolverForTag) RemoveTag(ctx context.Context, key string) (*gqlmodel.T
 		return nil, fmt.Errorf("tag '%s' is used in dashboard '%s' entry '%s', remove this reference before deleting the tag", key, dashboard.Name, usedInEntries[0].Title)
 	}
 
+	usedInMappings := []model.ExportMapping{}
+	if err := r.DB.
+		Joins("INNER JOIN export_mapping_tags ON export_mapping_tags.export_mapping_id = export_mappings.id").
+		Where("export_mappings.user_id = ?", userID).
+		Where("export_mapping_tags.key = ?", key).
+		Find(&usedInMappings).Error; err != nil {
+		return nil, err
+	}
+
+	if len(usedInMappings) > 0 {
+		return nil, fmt.Errorf("tag '%s' is used in export mapping '%s', remove this reference before deleting the tag", key, usedInMappings[0].Project)
+	}
+
 	tx := r.DB.Begin()
 	if err := tx.Where(model.TagDefinition{Key: key, UserID: userID}).
 		Delete(new(model.TagDefinition)).Error; err != nil {

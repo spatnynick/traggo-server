@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"github.com/traggo/server/exportmapping"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ func TestStatus_returnsOnlyRunningTimersOfUser(t *testing.T) {
 	user.TimeSpan("2020-01-01T08:00:00Z", "2020-01-01T09:00:00Z") // finished, must be ignored
 	db.User(6).RunningTimeSpan("2020-01-01T11:00:00Z")            // other user, must be ignored
 
-	resolver := NewResolver(db.DB, 4, model.Version{Name: "1.2.3", BuildDate: "date", Commit: "abc"})
+	resolver := NewResolver(db.DB, 4, model.Version{Name: "1.2.3", BuildDate: "date", Commit: "abc"}, exportmapping.ExportConfig{})
 
 	before := time.Now()
 	status, err := resolver.RootQuery().Status(fake.User(5))
@@ -38,7 +39,7 @@ func TestStatus_noRunningTimers(t *testing.T) {
 	defer db.Close()
 	db.User(5)
 
-	resolver := NewResolver(db.DB, 4, model.Version{Name: "1.2.3"})
+	resolver := NewResolver(db.DB, 4, model.Version{Name: "1.2.3"}, exportmapping.ExportConfig{})
 	status, err := resolver.RootQuery().Status(fake.User(5))
 
 	require.NoError(t, err)

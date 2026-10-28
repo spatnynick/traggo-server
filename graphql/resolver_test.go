@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"context"
+	"github.com/traggo/server/exportmapping"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 func TestNewResolver_doesNotThrow(t *testing.T) {
 	db := test.InMemoryDB(t)
 	defer db.Close()
-	resolver := NewResolver(db.DB, 4, model.Version{Name: "oops", BuildDate: "date", Commit: "aeu"})
+	resolver := NewResolver(db.DB, 4, model.Version{Name: "oops", BuildDate: "date", Commit: "aeu"}, exportmapping.ExportConfig{})
 	resolver.RootMutation()
 	resolver.RootQuery()
 	version, e := resolver.RootQuery().Version(context.Background())

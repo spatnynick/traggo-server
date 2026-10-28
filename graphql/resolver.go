@@ -11,6 +11,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/traggo/server/auth"
 	"github.com/traggo/server/device"
+	"github.com/traggo/server/exportmapping"
 	"github.com/traggo/server/generated/gqlmodel"
 	"github.com/traggo/server/generated/gqlschema"
 	"github.com/traggo/server/model"
@@ -21,7 +22,7 @@ import (
 )
 
 // NewResolver combines all resolvers to a resolver root.
-func NewResolver(db *gorm.DB, passStrength int, version model.Version) gqlschema.ResolverRoot {
+func NewResolver(db *gorm.DB, passStrength int, version model.Version, export exportmapping.ExportConfig) gqlschema.ResolverRoot {
 	return &resolver{
 		ResolverForUser: user.ResolverForUser{
 			DB:           db,
@@ -42,8 +43,9 @@ func NewResolver(db *gorm.DB, passStrength int, version model.Version) gqlschema
 		ResolverForSettings: setting.ResolverForSettings{
 			DB: db,
 		},
-		ResolverForDashboard: dashboard.NewResolverForDashboard(db),
-		version:              version,
+		ResolverForDashboard:     dashboard.NewResolverForDashboard(db),
+		ResolverForExportMapping: exportmapping.NewResolverForExportMapping(db, export),
+		version:                  version,
 	}
 }
 
@@ -56,6 +58,7 @@ type resolver struct {
 	version model.Version
 	setting.ResolverForSettings
 	dashboard.ResolverForDashboard
+	exportmapping.ResolverForExportMapping
 }
 
 func (r *resolver) RootMutation() gqlschema.RootMutationResolver {

@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"github.com/traggo/server/exportmapping"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -14,7 +15,7 @@ import (
 func TestHandler_jsonOverHtml(t *testing.T) {
 	db := test.InMemoryDB(t)
 	defer db.Close()
-	resolver := NewResolver(db.DB, 4, model.Version{})
+	resolver := NewResolver(db.DB, 4, model.Version{}, exportmapping.ExportConfig{})
 	handler := Handler("/gql", resolver, NewDirective())
 	req := httptest.NewRequest("GET", "/gql?query="+url.QueryEscape("query {currentUser {name}}"), strings.NewReader(""))
 	req.Header.Set("Accept", "text/html;application/json")
@@ -31,7 +32,7 @@ func TestHandler_jsonOverHtml(t *testing.T) {
 func TestHandler_htmlIfNotJson(t *testing.T) {
 	db := test.InMemoryDB(t)
 	defer db.Close()
-	resolver := NewResolver(db.DB, 4, model.Version{})
+	resolver := NewResolver(db.DB, 4, model.Version{}, exportmapping.ExportConfig{})
 	handler := Handler("/gql", resolver, NewDirective())
 	req := httptest.NewRequest("get", "/gql", strings.NewReader(""))
 	req.Header.Set("Accept", "text/html;application/xml")

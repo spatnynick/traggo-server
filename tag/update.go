@@ -47,6 +47,20 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 			tx.Rollback()
 			return nil, err
 		}
+		exportMappingIdsOfUser := tx.Model(new(model.ExportMapping)).
+			Select("id").
+			Where(&model.ExportMapping{UserID: userID}).
+			SubQuery()
+
+		if err := tx.
+			Model(new(model.ExportMappingTag)).
+			Where("export_mapping_id in ?", exportMappingIdsOfUser).
+			Where(&model.ExportMappingTag{Key: key}).
+			Updates(&model.ExportMappingTag{Key: *newKey}).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
 		usedInEntries := []model.DashboardEntry{}
 
 		if err := tx.

@@ -17,6 +17,8 @@ import {UsersPage} from './user/UsersPage';
 import {DashboardPage} from './dashboard/DashboardPage';
 import {DashboardsPage} from './dashboard/DashboardsPage';
 import {TagPage} from './tag/TagPage';
+import {ExportMappingsPage} from './exportmapping/ExportMappingsPage';
+import {ExportPage} from './exportmapping/ExportPage';
 import {SettingsPage} from './setting/SettingsPage';
 import {CalendarPage} from './timespan/calendar/CalendarPage';
 
@@ -44,6 +46,8 @@ export const Router = () => {
                 <Route exact path="/user/settings" component={SettingsPage} />
                 <Route exact path="/user/devices" component={DevicesPage} />
                 <Route exact path="/user/tags" component={TagPage} />
+                <Route exact path="/user/export-mappings" component={ExportMappingsPage} />
+                <Route exact path="/timesheet/export" component={ExportPage} />
                 {admin ? <Route exact path="/admin/users" component={UsersPage} /> : null}
                 <Route exact path="/" render={() => <Redirect to="/timesheet/list" />} />
             </Page>

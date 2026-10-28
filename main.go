@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -12,6 +14,7 @@ import (
 	"github.com/traggo/server/config"
 	"github.com/traggo/server/config/mode"
 	"github.com/traggo/server/database"
+	"github.com/traggo/server/exportmapping"
 	"github.com/traggo/server/graphql"
 	"github.com/traggo/server/logger"
 	"github.com/traggo/server/model"
@@ -66,7 +69,7 @@ func main() {
 func initRouter(db *gorm.DB, conf config.Config, version model.Version) *mux.Router {
 	gqlHandler := graphql.Handler(
 		"/graphql",
-		graphql.NewResolver(db, conf.PassStrength, version),
+		graphql.NewResolver(db, conf.PassStrength, version, exportConfig(conf)),
 		graphql.NewDirective())
 
 	router := mux.NewRouter()
@@ -97,4 +100,15 @@ func initCleanUp(db *gorm.DB) chan<- bool {
 	stopCleanUp := make(chan bool)
 	go auth.CleanUp(db, time.Minute*10, stopCleanUp)
 	return stopCleanUp
+}
+
+func exportConfig(conf config.Config) exportmapping.ExportConfig {
+	export := exportmapping.ExportConfig{Command: conf.ExportCommand}
+	if conf.DatabaseDialect == "sqlite3" && !strings.HasPrefix(conf.DatabaseConnection, "file:") {
+		// the export command runs in another working directory
+		if path, err := filepath.Abs(conf.DatabaseConnection); err == nil {
+			export.Database = path
+		}
+	}
+	return export
 }

@@ -45,6 +45,13 @@ type RootMutation {
     removeDashboardEntry(id: Int!): DashboardEntry! @hasRole(role: USER)
 
     setUserSettings(settings: InputUserSettings!): UserSettings! @hasRole(role: USER)
+
+    createExportMapping(mapping: InputExportMapping!): ExportMapping @hasRole(role: USER)
+    updateExportMapping(id: Int!, mapping: InputExportMapping!): ExportMapping @hasRole(role: USER)
+    removeExportMapping(id: Int!): ExportMapping @hasRole(role: USER)
+    runExport(run: InputExportRun!): ExportRunResult! @hasRole(role: USER)
+    # deletes the output folder of an export run (the folder of the files it reported)
+    deleteExportRunFolder(runId: Int!): ExportRun @hasRole(role: USER)
 }
 
 type RootQuery {
@@ -64,6 +71,11 @@ type RootQuery {
     dashboards: [Dashboard!] @hasRole(role: USER)
     userSettings: UserSettings!
     status: Status! @hasRole(role: USER)
+    exportMappings: [ExportMapping!] @hasRole(role: USER)
+    exportRunAvailable: Boolean! @hasRole(role: USER)
+    exportRuns: [ExportRun!] @hasRole(role: USER)
+    # base64 content of a file reported by an export run
+    exportRunFile(runId: Int!, path: String!): String! @hasRole(role: USER)
 }
 
 type Status {
@@ -317,4 +329,82 @@ enum DashboardSize {
 
 enum EntryType {
     PieChart, BarChart, StackedBarChart, LineChart, VerticalTable, HorizontalTable
+}
+
+# Maps a tag combination to the values an external export script writes.
+type ExportMapping {
+    id: Int!
+    tags: [TimeSpanTag!]!
+    client: String!
+    project: String!
+    # booked automatically by the export script (otherwise: by hand)
+    autoBooking: Boolean!
+    # the note starts with a reference: "<reference>: <description>"
+    noteReference: Boolean!
+    # merge all entries of a day into one, keeping the note of the latest entry
+    mergeDaily: Boolean!
+    subtotalGroup: String!
+}
+
+input InputExportMapping {
+    tags: [InputTimeSpanTag!]!
+    client: String!
+    project: String!
+    autoBooking: Boolean!
+    noteReference: Boolean!
+    mergeDaily: Boolean!
+    subtotalGroup: String!
+}
+
+enum ExportMode {
+    OVERVIEW
+    FULL
+}
+
+# Runs the server's configured export command (TRAGGO_EXPORT_COMMAND).
+# Range: month (YYYYMM), or from + to (YYYY-MM-DD), or none = current month.
+input InputExportRun {
+    month: String
+    from: String
+    to: String
+    mode: ExportMode!
+    dryRun: Boolean!
+    # what the command should do when its output folder already exists
+    ifExists: ExportIfExists!
+}
+
+enum ExportIfExists {
+    # stop without writing; the result names the existing folder
+    FAIL
+    # write to a new folder with a counter suffix (-2, -3, ...)
+    COUNTER
+}
+
+type ExportRunResult {
+    # null when the run was not done because its output folder exists
+    run: ExportRun
+    existingFolder: String
+}
+
+type ExportRun {
+    id: Int!
+    startedAt: Time!
+    durationMs: Int!
+    month: String!
+    from: String!
+    to: String!
+    mode: ExportMode!
+    dryRun: Boolean!
+    exitCode: Int!
+    log: String!
+    files: [ExportFile!]!
+    # output folder (folder of the reported files), empty if nothing was written
+    folder: String!
+    folderExists: Boolean!
+}
+
+# A file the export command reported with a "TRAGGO-EXPORT-FILE: <path>" output line.
+type ExportFile {
+    name: String!
+    path: String!
 }

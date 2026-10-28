@@ -28,6 +28,7 @@ type Config struct {
 	PassStrength       int      `default:"10" split_words:"true"`
 	DatabaseDialect    string   `default:"sqlite3" split_words:"true"`
 	DatabaseConnection string   `default:"data/traggo.db" split_words:"true"`
+	ExportCommand      string   `split_words:"true"`
 }
 
 // Get loads the application config.
